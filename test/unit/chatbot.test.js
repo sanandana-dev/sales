@@ -26,8 +26,7 @@ describe('AI Sales Chatbot Unit Tests', () => {
 
   describe('handleChatRequest - Configuration & Validation', () => {
     it('returns helpful setup message when NVIDIA_API_KEY is missing', async () => {
-      const prevKey = process.env.NVIDIA_API_KEY;
-      delete process.env.NVIDIA_API_KEY;
+      process.env.TEST_NO_KEY = '1';
 
       const req = {
         body: {
@@ -51,13 +50,11 @@ describe('AI Sales Chatbot Unit Tests', () => {
 
       await handleChatRequest(req, res);
 
+      delete process.env.TEST_NO_KEY;
+
       assert.strictEqual(responseStatusCode, 200);
       assert.strictEqual(responseBody.configured, false);
       assert.ok(responseBody.reply.includes('NVIDIA_API_KEY'));
-
-      if (prevKey) {
-        process.env.NVIDIA_API_KEY = prevKey;
-      }
     });
 
     it('rejects empty or whitespace-only messages with 400', async () => {

@@ -1,5 +1,56 @@
+const fs = require('fs');
+const path = require('path');
 const db = require('./db');
 const { safeLog } = require('./errors');
+
+/**
+ * Loads credentials from process.env or re-reads .env directly
+ * so changes made to .env take effect immediately without requiring a server restart.
+ */
+function getNvidiaCredentials() {
+  if (process.env.TEST_NO_KEY === '1') {
+    return { apiKey: '', model: 'nemotron-3.5-parse' };
+  }
+
+  const envFiles = [
+    path.join(__dirname, '..', '..', '.env'),
+    path.join(__dirname, '..', '.env'),
+    path.join(process.cwd(), '.env')
+  ];
+
+  for (const envFile of envFiles) {
+    if (fs.existsSync(envFile)) {
+      try {
+        const content = fs.readFileSync(envFile, 'utf8');
+        for (const line of content.split(/\r?\n/)) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const eqIdx = trimmed.indexOf('=');
+          if (eqIdx !== -1) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed
+              .slice(eqIdx + 1)
+              .trim()
+              .replace(/^["']|["']$/g, '');
+            if (key === 'NVIDIA_API_KEY' && val) {
+              process.env.NVIDIA_API_KEY = val;
+            }
+            if (key === 'NVIDIA_MODEL' && val) {
+              process.env.NVIDIA_MODEL = val;
+            }
+          }
+        }
+      } catch (_e) {
+        /* ignore env read error */
+      }
+    }
+  }
+
+  const apiKey = (process.env.NVIDIA_API_KEY || '').trim();
+  const model = (process.env.NVIDIA_MODEL || '').trim() || 'nemotron-3.5-parse';
+
+  return { apiKey, model };
+}
 
 /**
  * Builds a structured, compact representation of the current store sales data
@@ -190,8 +241,7 @@ async function handleChatRequest(req, res) {
       });
     }
 
-    const apiKey = process.env.NVIDIA_API_KEY ? process.env.NVIDIA_API_KEY.trim() : '';
-    const model = process.env.NVIDIA_MODEL ? process.env.NVIDIA_MODEL.trim() : 'nemotron-3.5-parse';
+    const { apiKey, model } = getNvidiaCredentials();
 
     // Build grounded sales context
     const salesContext = buildSalesContext(message);
@@ -243,19 +293,47 @@ ${salesContext.text}`;
     formattedMessages.push({ role: 'user', content: message.trim() });
 
     // Call NVIDIA AI OpenAI-compatible chat completions endpoint
-    const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    let targetModel = model;
+    let response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model,
+        model: targetModel,
         messages: formattedMessages,
         temperature: 0.1,
         max_tokens: 1024
       })
     });
+
+    // If the requested model returns 404 (e.g. model name alias or endpoint mismatch),
+    // automatically try the active Nemotron 3.5 NIM endpoint
+    if (response.status === 404) {
+      const fallbackModel = 'nvidia/nemotron-3.5-bolt-e4b';
+      const fallbackResponse = await fetch(
+        'https://integrate.api.nvidia.com/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: fallbackModel,
+            messages: formattedMessages,
+            temperature: 0.1,
+            max_tokens: 1024
+          })
+        }
+      );
+
+      if (fallbackResponse.ok) {
+        response = fallbackResponse;
+        targetModel = fallbackModel;
+      }
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -284,14 +362,16 @@ ${salesContext.text}`;
     }
 
     const data = await response.json();
+    const choiceMsg = data.choices?.[0]?.message;
     const reply =
-      data.choices?.[0]?.message?.content ||
+      choiceMsg?.content ||
+      choiceMsg?.reasoning_content ||
       'I was unable to retrieve a response from the sales analytics model.';
 
     return res.json({
       reply: reply.trim(),
       configured: true,
-      model
+      model: targetModel
     });
   } catch (error) {
     safeLog('error', `Error in /api/chat: ${error.message}`);
