@@ -7,6 +7,7 @@ import ProductBarChart from './components/ProductBarChart';
 import CategoryPieChart from './components/CategoryPieChart';
 import ProductTable from './components/ProductTable';
 import AddSaleModal from './components/AddSaleModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import analytics from '../../shared/analytics';
 import {
   fetchSummary,
@@ -181,34 +182,47 @@ export default function App() {
         />
 
         {/* KPI Cards Top Row */}
-        <KpiCards summary={summary} loading={loading} />
+        <ErrorBoundary title="KPI Metrics Unavailable" onReset={() => loadData(false)}>
+          <KpiCards summary={summary} loading={loading} />
+        </ErrorBoundary>
 
         {/* Charts Section: Line Trend Chart Full Width */}
         <div className="mb-6">
-          <TrendChart
-            data={trendData}
-            range={trendRange}
-            setRange={setTrendRange}
-            loading={loading}
-          />
+          <ErrorBoundary title="Trend Visualizations Unavailable" onReset={() => loadData(false)}>
+            <TrendChart
+              data={trendData}
+              range={trendRange}
+              setRange={setTrendRange}
+              loading={loading}
+            />
+          </ErrorBoundary>
         </div>
 
         {/* Charts Section: Top 5 Bar & Category Donut in 2 cols */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <ProductBarChart products={productsPerformance} loading={loading} />
-          <CategoryPieChart categories={categories} loading={loading} />
+          <ErrorBoundary title="Product Rankings Unavailable" onReset={() => loadData(false)}>
+            <ProductBarChart products={productsPerformance} loading={loading} />
+          </ErrorBoundary>
+          <ErrorBoundary title="Category Breakdown Unavailable" onReset={() => loadData(false)}>
+            <CategoryPieChart categories={categories} loading={loading} />
+          </ErrorBoundary>
         </div>
 
         {/* Product Performance Detailed Table */}
-        <ProductTable
-          products={productsPerformance}
-          loading={loading}
-          search={search}
-          setSearch={setSearch}
-          sortBy={sortBy}
-          order={order}
-          onSort={handleSort}
-        />
+        <ErrorBoundary
+          title="Product Performance Table Unavailable"
+          onReset={() => loadData(false)}
+        >
+          <ProductTable
+            products={productsPerformance}
+            loading={loading}
+            search={search}
+            setSearch={setSearch}
+            sortBy={sortBy}
+            order={order}
+            onSort={handleSort}
+          />
+        </ErrorBoundary>
       </main>
 
       {/* Footer */}

@@ -3,19 +3,39 @@ const router = express.Router();
 const db = require('./db');
 const analyticsModule = require('../../shared/analytics');
 const analytics = analyticsModule.default || analyticsModule;
+const schemasModule = require('../../shared/schemas');
+const {
+  createSaleSchema,
+  summaryQuerySchema,
+  salesTrendQuerySchema,
+  productsPerformanceQuerySchema,
+  categoriesQuerySchema
+} = schemasModule.default || schemasModule;
+
+// Schema validation middleware
+function validate(schema, source = 'query') {
+  return (req, res, next) => {
+    const result = schema.safeParse(req[source]);
+    if (!result.success) {
+      const firstError = result.error.errors[0]?.message || 'Validation failed';
+      return res.status(400).json({
+        error: firstError,
+        code: 'VALIDATION_ERROR',
+        details: result.error.format()
+      });
+    }
+    req.validated = result.data;
+    next();
+  };
+}
 
 // 1. GET /api/summary
 // Query: startDate, endDate, category
-router.get('/summary', (req, res) => {
+router.get('/summary', validate(summaryQuerySchema, 'query'), (req, res) => {
   try {
-    const { startDate, endDate, category } = req.query;
+    const { startDate, endDate, category } = req.validated;
 
-    const hasCustomDates = Boolean(
-      startDate &&
-        endDate &&
-        analytics.isValidIsoDate(startDate) &&
-        analytics.isValidIsoDate(endDate)
-    );
+    const hasCustomDates = Boolean(startDate && endDate);
 
     let whereClauses = [];
     let params = [];
@@ -26,11 +46,11 @@ router.get('/summary', (req, res) => {
       whereClauses.push('s.sale_date <= ?');
       params.push(endDate);
     } else {
-      if (startDate && analytics.isValidIsoDate(startDate)) {
+      if (startDate) {
         whereClauses.push('s.sale_date >= ?');
         params.push(startDate);
       }
-      if (endDate && analytics.isValidIsoDate(endDate)) {
+      if (endDate) {
         whereClauses.push('s.sale_date <= ?');
         params.push(endDate);
       }
@@ -65,7 +85,6 @@ router.get('/summary', (req, res) => {
     let prevStats = { totalSales: 0, totalRevenue: 0, totalProfit: 0 };
 
     if (hasCustomDates) {
-      // Prior consecutive period of exact same duration in UTC
       const { prevStart, prevEnd } = analytics.getPriorDateRange(startDate, endDate);
 
       const prevWhere = ['s.sale_date >= ?', 's.sale_date <= ?'];
@@ -87,17 +106,14 @@ router.get('/summary', (req, res) => {
       `;
       prevStats = db.prepare(prevQuery).get(...prevParams);
     } else {
-      // If all time is viewed, calculate current 30 days vs prior 30 days for accurate period delta
       const maxDateRow = db
         .prepare('SELECT MAX(sale_date) as maxDate, MIN(sale_date) as minDate FROM sales')
         .get();
       const maxDateStr = maxDateRow?.maxDate || analytics.formatUtcDate(new Date());
       const minDateStr = maxDateRow?.minDate || maxDateStr;
 
-      // Span duration in days
       const totalSpanDays = analytics.daysBetweenUtc(minDateStr, maxDateStr);
       if (totalSpanDays > 0) {
-        // Compute previous equal span
         const prevEnd = analytics.addDaysUtc(minDateStr, -1);
         const prevStart = analytics.addDaysUtc(prevEnd, -totalSpanDays);
 
@@ -148,23 +164,25 @@ router.get('/summary', (req, res) => {
     });
   } catch (error) {
     console.error('Error in /api/summary:', error);
-    res.status(500).json({ error: 'Failed to retrieve sales summary' });
+    res
+      .status(500)
+      .json({ error: 'Failed to retrieve sales summary', code: 'SUMMARY_QUERY_ERROR' });
   }
 });
 
 // 2. GET /api/sales-trend?range=monthly|weekly
-router.get('/sales-trend', (req, res) => {
+router.get('/sales-trend', validate(salesTrendQuerySchema, 'query'), (req, res) => {
   try {
-    const { range = 'monthly', startDate, endDate, category } = req.query;
+    const { range, startDate, endDate, category } = req.validated;
 
     let whereClauses = [];
     let params = [];
 
-    if (startDate && analytics.isValidIsoDate(startDate)) {
+    if (startDate) {
       whereClauses.push('s.sale_date >= ?');
       params.push(startDate);
     }
-    if (endDate && analytics.isValidIsoDate(endDate)) {
+    if (endDate) {
       whereClauses.push('s.sale_date <= ?');
       params.push(endDate);
     }
@@ -222,54 +240,49 @@ router.get('/sales-trend', (req, res) => {
     res.json(formatted);
   } catch (error) {
     console.error('Error in /api/sales-trend:', error);
-    res.status(500).json({ error: 'Failed to retrieve sales trends' });
+    res.status(500).json({ error: 'Failed to retrieve sales trends', code: 'TREND_QUERY_ERROR' });
   }
 });
 
 // 3. GET /api/products/performance
-router.get('/products/performance', (req, res) => {
-  try {
-    const {
-      search = '',
-      category = '',
-      sortBy = 'revenue',
-      order = 'desc',
-      startDate,
-      endDate
-    } = req.query;
+router.get(
+  '/products/performance',
+  validate(productsPerformanceQuerySchema, 'query'),
+  (req, res) => {
+    try {
+      const { search, category, sortBy, order, startDate, endDate } = req.validated;
 
-    let productWhereClauses = [];
-    let productParams = [];
+      let productWhereClauses = [];
+      let productParams = [];
 
-    if (search.trim()) {
-      productWhereClauses.push('p.name LIKE ?');
-      productParams.push(`%${search.trim()}%`);
-    }
-    if (category && category !== 'All') {
-      productWhereClauses.push('p.category = ?');
-      productParams.push(category);
-    }
+      if (search) {
+        productWhereClauses.push('p.name LIKE ?');
+        productParams.push(`%${search}%`);
+      }
+      if (category && category !== 'All') {
+        productWhereClauses.push('p.category = ?');
+        productParams.push(category);
+      }
 
-    const productWhereSql =
-      productWhereClauses.length > 0 ? `WHERE ${productWhereClauses.join(' AND ')}` : '';
+      const productWhereSql =
+        productWhereClauses.length > 0 ? `WHERE ${productWhereClauses.join(' AND ')}` : '';
 
-    // BUG-04 FIX: Move sales date filter into LEFT JOIN condition to avoid dropping 0-sales products
-    let salesDateConditions = [];
-    let salesParams = [];
+      let salesDateConditions = [];
+      let salesParams = [];
 
-    if (startDate && analytics.isValidIsoDate(startDate)) {
-      salesDateConditions.push('s.sale_date >= ?');
-      salesParams.push(startDate);
-    }
-    if (endDate && analytics.isValidIsoDate(endDate)) {
-      salesDateConditions.push('s.sale_date <= ?');
-      salesParams.push(endDate);
-    }
+      if (startDate) {
+        salesDateConditions.push('s.sale_date >= ?');
+        salesParams.push(startDate);
+      }
+      if (endDate) {
+        salesDateConditions.push('s.sale_date <= ?');
+        salesParams.push(endDate);
+      }
 
-    const salesJoinCondition =
-      salesDateConditions.length > 0 ? `AND ${salesDateConditions.join(' AND ')}` : '';
+      const salesJoinCondition =
+        salesDateConditions.length > 0 ? `AND ${salesDateConditions.join(' AND ')}` : '';
 
-    const query = `
+      const query = `
       SELECT 
         p.id,
         p.name,
@@ -286,70 +299,70 @@ router.get('/products/performance', (req, res) => {
       GROUP BY p.id
     `;
 
-    const allParams = [...salesParams, ...productParams];
-    let rows = db.prepare(query).all(...allParams);
+      const allParams = [...salesParams, ...productParams];
+      let rows = db.prepare(query).all(...allParams);
 
-    // Format money and margins
-    rows = rows.map(item => {
-      const rev = analytics.toDollars(analytics.toCents(item.totalRevenue));
-      const prof = analytics.toDollars(analytics.toCents(item.totalProfit));
-      const margin = analytics.calculateProfitMargin(rev, prof);
-      return {
-        ...item,
-        costPrice: analytics.toDollars(analytics.toCents(item.costPrice)),
-        sellingPrice: analytics.toDollars(analytics.toCents(item.sellingPrice)),
-        totalRevenue: rev,
-        totalProfit: prof,
-        profitMargin: margin
+      rows = rows.map(item => {
+        const rev = analytics.toDollars(analytics.toCents(item.totalRevenue));
+        const prof = analytics.toDollars(analytics.toCents(item.totalProfit));
+        const margin = analytics.calculateProfitMargin(rev, prof);
+        return {
+          ...item,
+          costPrice: analytics.toDollars(analytics.toCents(item.costPrice)),
+          sellingPrice: analytics.toDollars(analytics.toCents(item.sellingPrice)),
+          totalRevenue: rev,
+          totalProfit: prof,
+          profitMargin: margin
+        };
+      });
+
+      rows = analytics.assignProductBadges(rows);
+
+      const validSortFields = {
+        revenue: 'totalRevenue',
+        profit: 'totalProfit',
+        unitsSold: 'unitsSold',
+        margin: 'profitMargin',
+        name: 'name',
+        costPrice: 'costPrice',
+        sellingPrice: 'sellingPrice'
       };
-    });
 
-    // Assign badges using pure business logic function
-    rows = analytics.assignProductBadges(rows);
+      const sortField = validSortFields[sortBy] || 'totalRevenue';
+      const isAsc = order === 'asc';
 
-    // Apply requested sort
-    const validSortFields = {
-      revenue: 'totalRevenue',
-      profit: 'totalProfit',
-      unitsSold: 'unitsSold',
-      margin: 'profitMargin',
-      name: 'name',
-      costPrice: 'costPrice',
-      sellingPrice: 'sellingPrice'
-    };
+      rows.sort((a, b) => {
+        if (typeof a[sortField] === 'string') {
+          return isAsc
+            ? a[sortField].localeCompare(b[sortField])
+            : b[sortField].localeCompare(a[sortField]);
+        }
+        return isAsc ? a[sortField] - b[sortField] : b[sortField] - a[sortField];
+      });
 
-    const sortField = validSortFields[sortBy] || 'totalRevenue';
-    const isAsc = String(order).toLowerCase() === 'asc';
-
-    rows.sort((a, b) => {
-      if (typeof a[sortField] === 'string') {
-        return isAsc
-          ? a[sortField].localeCompare(b[sortField])
-          : b[sortField].localeCompare(a[sortField]);
-      }
-      return isAsc ? a[sortField] - b[sortField] : b[sortField] - a[sortField];
-    });
-
-    res.json(rows);
-  } catch (error) {
-    console.error('Error in /api/products/performance:', error);
-    res.status(500).json({ error: 'Failed to retrieve product performance' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error in /api/products/performance:', error);
+      res
+        .status(500)
+        .json({ error: 'Failed to retrieve product performance', code: 'PERFORMANCE_QUERY_ERROR' });
+    }
   }
-});
+);
 
 // 4. GET /api/categories
-router.get('/categories', (req, res) => {
+router.get('/categories', validate(categoriesQuerySchema, 'query'), (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate } = req.validated;
 
     let salesDateConditions = [];
     let params = [];
 
-    if (startDate && analytics.isValidIsoDate(startDate)) {
+    if (startDate) {
       salesDateConditions.push('s.sale_date >= ?');
       params.push(startDate);
     }
-    if (endDate && analytics.isValidIsoDate(endDate)) {
+    if (endDate) {
       salesDateConditions.push('s.sale_date <= ?');
       params.push(endDate);
     }
@@ -397,7 +410,9 @@ router.get('/categories', (req, res) => {
     res.json(categories);
   } catch (error) {
     console.error('Error in /api/categories:', error);
-    res.status(500).json({ error: 'Failed to retrieve category performance' });
+    res
+      .status(500)
+      .json({ error: 'Failed to retrieve category performance', code: 'CATEGORIES_QUERY_ERROR' });
   }
 });
 
@@ -423,50 +438,26 @@ router.get('/products', (_req, res) => {
     res.json(formatted);
   } catch (error) {
     console.error('Error in /api/products:', error);
-    res.status(500).json({ error: 'Failed to retrieve products' });
+    res.status(500).json({ error: 'Failed to retrieve products', code: 'PRODUCTS_QUERY_ERROR' });
   }
 });
 
 // 6. POST /api/sales
-router.post('/sales', (req, res) => {
+router.post('/sales', validate(createSaleSchema, 'body'), (req, res) => {
   try {
-    const { productId, quantity, saleDate, sellingPrice } = req.body;
-
-    if (!productId || isNaN(Number(productId))) {
-      return res.status(400).json({ error: 'A valid Product ID is required.' });
-    }
+    const { productId, quantity, saleDate, sellingPrice } = req.validated;
 
     const product = db.prepare('SELECT * FROM products WHERE id = ?').get(productId);
     if (!product) {
-      return res.status(404).json({ error: 'Product not found.' });
+      return res.status(404).json({ error: 'Product not found.', code: 'NOT_FOUND' });
     }
 
-    const qty = parseInt(quantity, 10);
-    if (isNaN(qty) || qty < 1 || qty > 1000) {
-      return res.status(400).json({ error: 'Quantity must be an integer between 1 and 1000.' });
-    }
-
-    let finalDate = saleDate;
-    if (!finalDate) {
-      finalDate = analytics.formatUtcDate(new Date());
-    } else if (!analytics.isValidIsoDate(finalDate)) {
-      return res
-        .status(400)
-        .json({ error: 'Sale date must be a valid calendar date in YYYY-MM-DD format.' });
-    }
-
-    let unitPrice = product.selling_price;
-    if (sellingPrice !== undefined && sellingPrice !== null && sellingPrice !== '') {
-      const parsedPrice = parseFloat(sellingPrice);
-      if (isNaN(parsedPrice) || parsedPrice <= 0 || !isFinite(parsedPrice)) {
-        return res.status(400).json({ error: 'Selling price must be a valid positive number.' });
-      }
-      unitPrice = parsedPrice;
-    }
-
+    const finalDate = saleDate || analytics.formatUtcDate(new Date());
+    const unitPrice = sellingPrice !== undefined ? sellingPrice : product.selling_price;
     const unitCost = product.cost_price;
-    const revenue = analytics.calculateRevenue(qty, unitPrice);
-    const cost = analytics.calculateCost(qty, unitCost);
+
+    const revenue = analytics.calculateRevenue(quantity, unitPrice);
+    const cost = analytics.calculateCost(quantity, unitCost);
     const profit = analytics.calculateProfit(revenue, cost);
 
     const insertStmt = db.prepare(`
@@ -474,14 +465,22 @@ router.post('/sales', (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const result = insertStmt.run(product.id, qty, unitCost, unitPrice, revenue, profit, finalDate);
+    const result = insertStmt.run(
+      product.id,
+      quantity,
+      unitCost,
+      unitPrice,
+      revenue,
+      profit,
+      finalDate
+    );
 
     const newSale = {
       id: result.lastInsertRowid,
       productId: product.id,
       productName: product.name,
       category: product.category,
-      quantity: qty,
+      quantity,
       unitCost: analytics.toDollars(analytics.toCents(unitCost)),
       unitPrice: analytics.toDollars(analytics.toCents(unitPrice)),
       revenue,
@@ -496,7 +495,7 @@ router.post('/sales', (req, res) => {
     });
   } catch (error) {
     console.error('Error in POST /api/sales:', error);
-    res.status(500).json({ error: 'Failed to record sale' });
+    res.status(500).json({ error: 'Failed to record sale', code: 'SALE_CREATION_ERROR' });
   }
 });
 

@@ -7,7 +7,8 @@ const res = spawnSync(
     '--test',
     '--experimental-test-coverage',
     'test/unit/pure-functions.test.js',
-    'test/unit/correctness-bugs.test.js'
+    'test/unit/correctness-bugs.test.js',
+    'test/unit/validation-security.test.js'
   ],
   { encoding: 'utf-8' }
 );

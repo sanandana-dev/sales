@@ -9,3 +9,5 @@ This document records architectural, technical, and operational decisions made t
 - [phase 1] Pinned TypeScript, ESLint, Prettier, and type definitions — Ensures exact reproducible builds across environments.
 - [phase 2] Extracted pure financial and UTC date math into shared/analytics.js with 100% line coverage — Fixes floating-point drift, DST shifts, and missing edge case handling.
 - [phase 2] Enforced 80% coverage threshold gate via test/coverage-gate.js — Ensures regressions in core business logic fail the check pipeline.
+- [phase 3] Added zod runtime validation schemas and helmet/rate-limiting security middleware — Rejects invalid input with structured 400 responses and protects server against payload injection and rate abuse.
+- [phase 3] Added ErrorBoundary component to client and sanitized logging to server — Prevents blank screens on render crashes and prevents secrets from being logged.
