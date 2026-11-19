@@ -81,9 +81,14 @@ export default function TopProductsSection({ products = [], onViewAll }) {
                   {getProductIcon(p.name, idx)}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xs font-bold text-[#172033] dark:text-white truncate">
-                    {p.name}
-                  </h3>
+                  <div className="flex items-center justify-between gap-1">
+                    <h3 className="text-xs font-bold text-[#172033] dark:text-white truncate">
+                      {p.name}
+                    </h3>
+                    <span className="shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400">
+                      Fast Moving
+                    </span>
+                  </div>
                   <span className="text-[10px] text-[#64748B] dark:text-[#8E9DB2] block mt-0.5">
                     {p.category || 'Product'}
                   </span>

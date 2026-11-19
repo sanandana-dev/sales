@@ -315,22 +315,19 @@ ${salesContext.text}`;
     // automatically try the active Nemotron 3.5 NIM endpoint
     if (response.status === 404) {
       const fallbackModel = 'nvidia/nemotron-3.5-bolt-e4b';
-      const fallbackResponse = await fetch(
-        'https://integrate.api.nvidia.com/v1/chat/completions',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: fallbackModel,
-            messages: formattedMessages,
-            temperature: 0.1,
-            max_tokens: 1024
-          })
-        }
-      );
+      const fallbackResponse = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: fallbackModel,
+          messages: formattedMessages,
+          temperature: 0.1,
+          max_tokens: 1024
+        })
+      });
 
       if (fallbackResponse.ok) {
         response = fallbackResponse;

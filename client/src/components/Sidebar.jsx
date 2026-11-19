@@ -3,9 +3,6 @@ import {
   LayoutDashboard,
   TrendingUp,
   Package,
-  Users,
-  FileBarChart2,
-  Settings,
   Sun,
   Moon,
   Sparkles,
@@ -28,10 +25,7 @@ export default function Sidebar({
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'analytics', label: 'Sales Analytics', icon: TrendingUp },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'reports', label: 'Reports', icon: FileBarChart2 },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'products', label: 'Products', icon: Package }
   ];
 
   return (

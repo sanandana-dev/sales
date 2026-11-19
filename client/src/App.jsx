@@ -27,6 +27,11 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 const AddSaleModal = React.lazy(() => import('./components/AddSaleModal'));
 const FileUploadModal = React.lazy(() => import('./components/FileUploadModal'));
 const SalesChatbot = React.lazy(() => import('./components/SalesChatbot'));
+const ProductTable = React.lazy(() => import('./components/ProductTable'));
+const ProductMatrixCard = React.lazy(() => import('./components/ProductMatrixCard'));
+const SlowMovingStockCard = React.lazy(() => import('./components/SlowMovingStockCard'));
+const CategoryPieChart = React.lazy(() => import('./components/CategoryPieChart'));
+const PeakTimesCard = React.lazy(() => import('./components/PeakTimesCard'));
 
 export default function App() {
   // Navigation & Drawer states
@@ -53,11 +58,37 @@ export default function App() {
   const [summary, setSummary] = useState(null);
   const [trendData, setTrendData] = useState([]);
   const [productsPerformance, setProductsPerformance] = useState([]);
-  const [, setCategories] = useState([]);
+  const [categoriesShare, setCategories] = useState([]);
   const [productsCatalog, setProductsCatalog] = useState([]);
   const [matrixData, setMatrixData] = useState(null);
   const [peakData, setPeakData] = useState(null);
   const [slowMovingData, setSlowMovingData] = useState(null);
+
+  // Product sorting state
+  const [productSortBy, setProductSortBy] = useState('revenue');
+  const [productOrder, setProductOrder] = useState('desc');
+
+  const handleProductSort = field => {
+    if (productSortBy === field) {
+      setProductOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setProductSortBy(field);
+      setProductOrder('desc');
+    }
+  };
+
+  const sortedProducts = React.useMemo(() => {
+    return [...productsPerformance].sort((a, b) => {
+      let aVal = a[productSortBy];
+      let bVal = b[productSortBy];
+      if (typeof aVal === 'string') {
+        return productOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      aVal = Number(aVal) || 0;
+      bVal = Number(bVal) || 0;
+      return productOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }, [productsPerformance, productSortBy, productOrder]);
 
   // Loading and Error States
   const [loading, setLoading] = useState(true);
@@ -139,9 +170,6 @@ export default function App() {
 
   const handleNavClick = navId => {
     setActiveNav(navId);
-    if (navId === 'analytics' || navId === 'products' || navId === 'reports') {
-      setIsAdvancedOpen(true);
-    }
   };
 
   const handleClearAllData = async () => {
@@ -238,24 +266,149 @@ export default function App() {
             </div>
           )}
 
-          {/* 3. Sales Performance Header Banner */}
-          <div className="mb-5">
-            <SalesPerformanceBanner
-              growthPct={summary?.changes?.revenueChangePct || 0}
-              hasSales={Boolean(summary && summary.totalSales > 0)}
-            />
-          </div>
+          {activeNav === 'products' ? (
+            <div className="space-y-6">
+              {/* Products View Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-[#151927] border border-[#E2E8F0] dark:border-[#1E2436] shadow-xs">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FF901E]" />
+                    <h1 className="text-lg font-extrabold text-[#172033] dark:text-white tracking-tight">
+                      Products & Inventory Velocity
+                    </h1>
+                  </div>
+                  <p className="text-xs text-[#64748B] dark:text-[#8E9DB2] mt-1">
+                    Live catalog items tagged by momentum: Fast Moving (Best Sellers), Moderate, and
+                    Slow Moving.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsAddSaleOpen(true)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#FF901E] hover:bg-[#e07d15] text-white shadow-xs transition"
+                  >
+                    + Record Sale
+                  </button>
+                  <button
+                    onClick={() => setIsUploadOpen(true)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-[#1E2436] dark:hover:bg-[#27314C] text-[#172033] dark:text-white transition"
+                  >
+                    Import Products
+                  </button>
+                </div>
+              </div>
 
-          {/* 4. Top Row of 4 KPI Cards */}
-          <div className="mb-5">
-            <ErrorBoundary title="KPI Metrics Unavailable" onReset={() => loadData(false)}>
-              <KPICardsRow summary={summary} trendData={trendData} loading={loading} />
-            </ErrorBoundary>
-          </div>
+              {/* Velocity Summary Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#151927] border border-[#E2E8F0] dark:border-[#1E2436] shadow-xs">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                    Total Catalog
+                  </span>
+                  <div className="flex items-baseline justify-between mt-1.5">
+                    <span className="text-xl font-bold text-[#172033] dark:text-white">
+                      {productsPerformance.length}
+                    </span>
+                    <span className="text-xs font-bold text-slate-500">Products</span>
+                  </div>
+                </div>
 
-          {/* 5. Main Revenue/Profit Chart & 6. Right Insights Panel */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-stretch">
-            <div className="lg:col-span-8 flex flex-col">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#151927] border border-emerald-100 dark:border-emerald-950/40 shadow-xs">
+                  <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                    Fast Moving
+                  </span>
+                  <div className="flex items-baseline justify-between mt-1.5">
+                    <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                      {
+                        productsPerformance.filter(
+                          p => p.badge === 'Best Seller' || p.badge === 'Fast Moving'
+                        ).length
+                      }
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+                      High Velocity
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#151927] border border-blue-100 dark:border-blue-950/40 shadow-xs">
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                    Moderate
+                  </span>
+                  <div className="flex items-baseline justify-between mt-1.5">
+                    <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
+                      {
+                        productsPerformance.filter(
+                          p => p.badge === 'Moderate' || (!p.badge && p.badge !== 'Best Seller')
+                        ).length
+                      }
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                      Steady Sales
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#151927] border border-amber-100 dark:border-amber-950/40 shadow-xs">
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    Slow Moving
+                  </span>
+                  <div className="flex items-baseline justify-between mt-1.5">
+                    <span className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                      {
+                        productsPerformance.filter(
+                          p => p.badge === 'Slow Mover' || p.badge === 'Slow Moving'
+                        ).length
+                      }
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
+                      Action Needed
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Interactive Product Table */}
+              <Suspense
+                fallback={
+                  <div className="p-12 text-center text-xs text-slate-400">
+                    Loading products table...
+                  </div>
+                }
+              >
+                <ProductTable
+                  products={sortedProducts}
+                  loading={loading}
+                  search={search}
+                  setSearch={setSearch}
+                  sortBy={productSortBy}
+                  order={productOrder}
+                  onSort={handleProductSort}
+                />
+              </Suspense>
+
+              {/* Bottom Matrix & Slow Moving Insights */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                <div className="lg:col-span-7 flex flex-col">
+                  <Suspense fallback={null}>
+                    <ProductMatrixCard matrixData={matrixData} loading={loading} />
+                  </Suspense>
+                </div>
+                <div className="lg:col-span-5 flex flex-col">
+                  <Suspense fallback={null}>
+                    <SlowMovingStockCard slowMovingData={slowMovingData} loading={loading} />
+                  </Suspense>
+                </div>
+              </div>
+            </div>
+          ) : activeNav === 'analytics' ? (
+            <div className="space-y-6">
+              {/* Sales Performance Banner */}
+              <SalesPerformanceBanner
+                growthPct={summary?.changes?.revenueChangePct || 0}
+                hasSales={Boolean(summary && summary.totalSales > 0)}
+              />
+
+              {/* Trend Chart */}
               <ErrorBoundary
                 title="Trend Visualizations Unavailable"
                 onReset={() => loadData(false)}
@@ -267,32 +420,85 @@ export default function App() {
                   loading={loading}
                 />
               </ErrorBoundary>
-            </div>
-            <div className="lg:col-span-4 flex flex-col">
-              <ErrorBoundary title="Insights Unavailable" onReset={() => loadData(false)}>
-                <InsightsPanel
-                  summary={summary}
-                  topProduct={productsPerformance[0]}
-                  onViewAll={() => setIsAdvancedOpen(true)}
-                />
-              </ErrorBoundary>
-            </div>
-          </div>
 
-          {/* 7. Top Products Section & 8. Upgrade Banner */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-stretch">
-            <div className="lg:col-span-8 flex flex-col">
-              <ErrorBoundary title="Top Products Unavailable" onReset={() => loadData(false)}>
-                <TopProductsSection
-                  products={productsPerformance}
-                  onViewAll={() => setIsAdvancedOpen(true)}
+              {/* Peak Times & Category Share */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                <div className="lg:col-span-6 flex flex-col">
+                  <Suspense fallback={null}>
+                    <PeakTimesCard peakData={peakData} loading={loading} />
+                  </Suspense>
+                </div>
+                <div className="lg:col-span-6 flex flex-col">
+                  <Suspense fallback={null}>
+                    <CategoryPieChart
+                      categories={categoriesShare}
+                      selectedCategory={null}
+                      onSelectCategory={() => {}}
+                    />
+                  </Suspense>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Default Dashboard View
+            <>
+              {/* 3. Sales Performance Header Banner */}
+              <div className="mb-5">
+                <SalesPerformanceBanner
+                  growthPct={summary?.changes?.revenueChangePct || 0}
+                  hasSales={Boolean(summary && summary.totalSales > 0)}
                 />
-              </ErrorBoundary>
-            </div>
-            <div className="lg:col-span-4 flex flex-col">
-              <UpgradeBanner onUpgradeClick={() => setIsAdvancedOpen(true)} />
-            </div>
-          </div>
+              </div>
+
+              {/* 4. Top Row of 4 KPI Cards */}
+              <div className="mb-5">
+                <ErrorBoundary title="KPI Metrics Unavailable" onReset={() => loadData(false)}>
+                  <KPICardsRow summary={summary} trendData={trendData} loading={loading} />
+                </ErrorBoundary>
+              </div>
+
+              {/* 5. Main Revenue/Profit Chart & 6. Right Insights Panel */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-stretch">
+                <div className="lg:col-span-8 flex flex-col">
+                  <ErrorBoundary
+                    title="Trend Visualizations Unavailable"
+                    onReset={() => loadData(false)}
+                  >
+                    <MainRevenueProfitChart
+                      trendData={trendData}
+                      range={trendRange}
+                      setRange={setTrendRange}
+                      loading={loading}
+                    />
+                  </ErrorBoundary>
+                </div>
+                <div className="lg:col-span-4 flex flex-col">
+                  <ErrorBoundary title="Insights Unavailable" onReset={() => loadData(false)}>
+                    <InsightsPanel
+                      summary={summary}
+                      topProduct={productsPerformance[0]}
+                      onViewAll={() => setActiveNav('products')}
+                    />
+                  </ErrorBoundary>
+                </div>
+              </div>
+
+              {/* 7. Top Products Section & 8. Upgrade Banner */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5 items-stretch">
+                <div className="lg:col-span-8 flex flex-col">
+                  <ErrorBoundary title="Top Products Unavailable" onReset={() => loadData(false)}>
+                    <TopProductsSection
+                      products={productsPerformance}
+                      onViewAll={() => setActiveNav('products')}
+                    />
+                  </ErrorBoundary>
+                </div>
+                <div className="lg:col-span-4 flex flex-col">
+                  <UpgradeBanner onUpgradeClick={() => setIsAdvancedOpen(true)} />
+                </div>
+              </div>
+            </>
+          )}
         </main>
 
         {/* Footer */}
