@@ -7,6 +7,7 @@ import ProductBarChart from './components/ProductBarChart';
 import CategoryPieChart from './components/CategoryPieChart';
 import ProductTable from './components/ProductTable';
 import AddSaleModal from './components/AddSaleModal';
+import analytics from '../../shared/analytics';
 import {
   fetchSummary,
   fetchSalesTrend,
@@ -46,28 +47,24 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // Calculate dates when preset changes
+  // Calculate dates when preset changes (BUG-06 fix: dynamic anchor, no hardcoded dates)
   useEffect(() => {
-    const today = new Date('2026-11-19T23:59:59'); // Anchor date for dataset
-    const formatDate = d => d.toISOString().slice(0, 10);
-
-    if (rangePreset === '30d') {
-      const start = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
-      setStartDate(formatDate(start));
-      setEndDate(formatDate(today));
-    } else if (rangePreset === '90d') {
-      const start = new Date(today.getTime() - 89 * 24 * 60 * 60 * 1000);
-      setStartDate(formatDate(start));
-      setEndDate(formatDate(today));
-    } else if (rangePreset === '12m') {
-      const start = new Date(today.getTime() - 364 * 24 * 60 * 60 * 1000);
-      setStartDate(formatDate(start));
-      setEndDate(formatDate(today));
-    } else if (rangePreset === 'all') {
+    if (rangePreset === 'all') {
       setStartDate('');
       setEndDate('');
+      return;
     }
-  }, [rangePreset]);
+
+    const todayUtc = new Date().toISOString().slice(0, 10);
+    const anchor =
+      trendData.length > 0 && trendData[trendData.length - 1]?.date
+        ? trendData[trendData.length - 1].date
+        : todayUtc;
+
+    const range = analytics.getRollingRange(rangePreset, anchor);
+    setStartDate(range.startDate);
+    setEndDate(range.endDate);
+  }, [rangePreset, trendData]);
 
   // Load all dashboard data
   const loadData = useCallback(

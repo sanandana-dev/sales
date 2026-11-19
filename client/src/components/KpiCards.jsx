@@ -8,6 +8,7 @@ import {
   ArrowDownRight,
   Minus
 } from 'lucide-react';
+import analytics from '../../../shared/analytics';
 
 function ChangeBadge({ change, isMargin = false }) {
   if (change === null || change === undefined || isNaN(change)) {
@@ -50,13 +51,7 @@ function ChangeBadge({ change, isMargin = false }) {
 }
 
 export default function KpiCards({ summary, loading }) {
-  const formatCurrency = val => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(val || 0);
-  };
+  const formatCurrency = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
 
   const cards = [
     {

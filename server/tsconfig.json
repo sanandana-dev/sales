@@ -14,5 +14,5 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["src/**/*", "test.js"]
+  "include": ["src/**/*", "test.js", "../shared/**/*"]
 }

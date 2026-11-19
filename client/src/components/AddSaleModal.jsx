@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Calculator, CheckCircle2, AlertCircle } from 'lucide-react';
 import { createSale } from '../api';
+import analytics from '../../../shared/analytics';
 
 export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCreated }) {
   const [productId, setProductId] = useState('');
@@ -30,14 +31,14 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
 
   const selectedProduct = products.find(p => p.id === Number(productId));
 
-  // Calculations for live preview
+  // Calculations for live preview using pure business logic functions
   const currentPrice = parseFloat(sellingPrice) || selectedProduct?.sellingPrice || 0;
   const currentCost = selectedProduct?.costPrice || 0;
   const currentQty = parseInt(quantity, 10) || 1;
-  const estRevenue = Number((currentQty * currentPrice).toFixed(2));
-  const estCost = Number((currentQty * currentCost).toFixed(2));
-  const estProfit = Number((estRevenue - estCost).toFixed(2));
-  const estMargin = estRevenue > 0 ? Number(((estProfit / estRevenue) * 100).toFixed(1)) : 0;
+  const estRevenue = analytics.calculateRevenue(currentQty, currentPrice);
+  const estCost = analytics.calculateCost(currentQty, currentCost);
+  const estProfit = analytics.calculateProfit(estRevenue, estCost);
+  const estMargin = analytics.calculateProfitMargin(estRevenue, estProfit);
 
   const handleSubmit = async e => {
     e.preventDefault();
