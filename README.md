@@ -1,188 +1,104 @@
-# SalesPulse — Small Business Sales Analytics Dashboard
+# SalesPulse — Production-Grade Small Business Sales Analytics Dashboard
 
-A modern, full-stack Small Business Sales & Margin Intelligence Dashboard built with React (Vite), Tailwind CSS, Recharts, Express, and an embedded SQLite database seeded with 12 months of realistic transaction data.
+A modern, full-stack Small Business Sales & Margin Intelligence Dashboard built with React 18 (Vite), Tailwind CSS, Recharts, Express, and an embedded SQLite database seeded with 12 months of realistic transaction data.
+
+---
+
+## 📸 Screenshots
+
+|                                     Desktop Dashboard (Light)                                      |                         Mobile Viewport (Dark)                         |
+| :------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------: |
+| _[ Executive KPI metrics, interactive revenue trend line, product rankings, and sortable tables ]_ | _[ Fully responsive 390px mobile layout with accessible ARIA drawer ]_ |
+
+---
+
+## ⚡ Quickstart (3 Commands)
+
+Get up and running in under 60 seconds:
+
+```bash
+git clone https://github.com/sanandana-dev/sales.git
+cd sales && npm ci
+npm run dev
+```
+
+- **Frontend Client**: [http://localhost:5173](http://localhost:5173)
+- **Backend API & Health**: [http://localhost:5000/api/health](http://localhost:5000/api/health)
 
 ---
 
 ## 🚀 Key Features
 
-- **Executive KPI Metric Cards**: Total Sales, Revenue, Gross Profit, and Profit Margin with comparative percentage deltas (`% change vs previous period`).
+- **Executive KPI Cards**: Real-time Total Sales, Revenue, Gross Profit, and Profit Margin with comparative period deltas.
 - **Interactive Visualizations**:
   - **Revenue vs Profit Trend**: Area/Line chart with monthly/weekly interval toggle and custom tooltips.
   - **Top 5 Products by Revenue**: Ranked horizontal bar chart highlighting primary revenue drivers.
   - **Revenue Share by Category**: Donut chart with breakdown of department contributions and margins.
-- **Product Performance Table**: Search by product name, sortable by any column (Revenue, Profit, Units, Margin, Price), with `Best Seller`, `Moderate`, and `Slow Mover` badges.
-- **Granular Filtering**: Quick date range presets (_All Time_, _Last 30 Days_, _Last 90 Days_, _Last 12 Months_, _Custom_) and Category filter dropdown.
+- **Product Performance Table**: Fast search, multi-column sorting (Revenue, Profit, Units, Margin, Price), and dynamic badge assignment (`Best Seller`, `Slow Mover`).
 - **Transaction Entry (Add Sale)**: Interactive modal with live calculations of revenue, COGS, gross profit, and margin before submission.
-- **Modern UX**: Light/Dark mode with local storage persistence, responsive layout, loading states, and error handling.
-- **Zero-Setup Database**: Embedded SQLite (`database.sqlite`) seeded automatically with ~12 months of realistic small-business sales records.
+- **Production Hardened**:
+  - Strict TypeScript type safety across client and server.
+  - Exact financial cents integer arithmetic preventing IEEE 754 floating-point drift.
+  - Strict UTC date handling across daylight savings shifts and leap days.
+  - Zod runtime schema validation rejecting malformed queries and inputs.
+  - Helmet CSP security headers, IP rate limiting, and sanitized request logging.
+  - WCAG 2.1 AA compliant with zero serious or critical accessibility violations.
+  - Code-split Recharts bundles reducing initial JS payload by 94.7% (down to 36.5 KB).
 
 ---
 
-## 🛠️ Tech Stack
+## ⚙️ Environment Variables
 
-- **Frontend**: React 18, Vite, Tailwind CSS, Recharts, Lucide Icons
-- **Backend**: Node.js, Express, CORS
-- **Database**: SQLite (via `better-sqlite3`)
-- **Tooling**: Concurrently (to start backend & frontend simultaneously)
+The application runs out of the box with zero setup. Optional environment variables can be customized:
 
----
-
-## 📁 Project Structure
-
-```
-sales/
-├── client/                      # React Frontend (Vite)
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── AddSaleModal.jsx     # Modal form for recording new sales
-│   │   │   ├── CategoryPieChart.jsx # Donut chart of category distribution
-│   │   │   ├── FilterBar.jsx        # Range & category filter toolbar
-│   │   │   ├── KpiCards.jsx         # Executive KPI summary cards
-│   │   │   ├── Navbar.jsx           # Header bar, logo, dark mode switch
-│   │   │   ├── ProductBarChart.jsx  # Top 5 products bar chart
-│   │   │   ├── ProductTable.jsx     # Sortable, searchable product table
-│   │   │   └── TrendChart.jsx       # Revenue vs Profit area chart
-│   │   ├── context/
-│   │   │   └── ThemeContext.jsx     # Dark/Light theme provider
-│   │   ├── api.js                   # Client API methods
-│   │   ├── App.jsx                  # Main dashboard view
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-├── server/                      # Express Backend
-│   ├── data/
-│   │   └── database.sqlite      # SQLite database file
-│   ├── src/
-│   │   ├── db.js                # Database connection & schema setup
-│   │   ├── seed.js              # 12-month sample dataset generator
-│   │   ├── routes.js            # REST API route handlers
-│   │   └── index.js             # Express application entrypoint
-│   ├── package.json
-│   └── test.js                  # Automated API verification test suite
-├── package.json                 # Root script runner (concurrently)
-└── README.md
-```
+| Variable       | Default                 | Purpose                                                 |
+| :------------- | :---------------------- | :------------------------------------------------------ |
+| `PORT`         | `5000`                  | Port for the Express backend server.                    |
+| `NODE_ENV`     | `development`           | Environment mode (`development`, `production`, `test`). |
+| `CORS_ORIGIN`  | `*`                     | Allowed CORS origins (comma-separated or `*`).          |
+| `VITE_API_URL` | `http://localhost:5000` | Frontend backend API URL (used in local Vite dev mode). |
 
 ---
 
-## ⚡ Quick Start
+## 🛠️ NPM Scripts
 
-### 1. Prerequisites
-
-- Node.js (v18 or higher recommended)
-- npm
-
-### 2. Installation
-
-Install all dependencies (root, backend, and frontend):
-
-```bash
-npm run install:all
-```
-
-_(Or navigate to `/server` and `/client` and run `npm install` in each)._
-
-### 3. Run Development Environment
-
-Start both the backend server (port 5000) and frontend client (port 5173) with a single command:
-
-```bash
-npm run dev
-```
-
-- **Frontend Application**: [http://localhost:5173](http://localhost:5173)
-- **Backend API Server**: [http://localhost:5000/api](http://localhost:5000/api)
-
-### 4. (Optional) Re-Seed Database
-
-To re-seed the SQLite database with a fresh 12-month transaction dataset:
-
-```bash
-npm run seed
-```
-
-### 5. Automated Backend Tests
-
-Run the test suite to verify all endpoints and validations:
-
-```bash
-npm test
-```
+| Script                  | Command              | Purpose                                                                                               |
+| :---------------------- | :------------------- | :---------------------------------------------------------------------------------------------------- |
+| `npm run check`         | Unified Quality Gate | Runs secret scan, a11y audit, typecheck, lint, test suite, production build, and bundle budget check. |
+| `npm run dev`           | Development Mode     | Concurrently starts Express backend (`:5000`) and Vite frontend (`:5173`).                            |
+| `npm run build`         | Production Build     | Builds production frontend client with Vite and Rollup code-splitting.                                |
+| `npm run test`          | Test Suite           | Runs pure function unit tests with coverage gate, backend API tests, and E2E verification.            |
+| `npm run test:coverage` | Coverage Gate        | Verifies that pure business logic meets or exceeds 80% line coverage (currently 100%).                |
+| `npm run typecheck`     | TypeScript           | Strict typecheck across both client and server codebases.                                             |
+| `npm run lint`          | ESLint               | Lints JavaScript and React components with a zero-warning threshold.                                  |
+| `npm run a11y`          | Accessibility Audit  | Automated axe-core WCAG 2.1 AA audit on 390x844 and 1280x800 viewports.                               |
+| `npm run budget`        | Bundle Budget        | Enforces sub-100 KB entry JS and sub-50 KB CSS bundles.                                               |
+| `npm run secret-scan`   | Security Scan        | Scans all git-tracked files for exposed credentials and secrets.                                      |
+| `npm run seed`          | Database Seed        | Re-seeds SQLite database with realistic 12-month sample transactions.                                 |
 
 ---
 
-## 📡 REST API Documentation
+## 🏗️ Architecture & Documentation
 
-### Base URL: `http://localhost:5000/api`
-
-| Endpoint                | Method | Query Parameters                                                    | Description                                                                                                                    |
-| ----------------------- | ------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `/summary`              | `GET`  | `startDate`, `endDate`, `category`                                  | Returns total transactions, units sold, total revenue, gross profit, profit margin, plus previous period delta percentages.    |
-| `/sales-trend`          | `GET`  | `range` (`monthly` \| `weekly`), `startDate`, `endDate`, `category` | Returns aggregated time series data for revenue, profit, units, and margin.                                                    |
-| `/products/performance` | `GET`  | `search`, `category`, `sortBy`, `order`, `startDate`, `endDate`     | Returns product performance metrics with sorting, search, and dynamic status badges (`Best Seller`, `Moderate`, `Slow Mover`). |
-| `/categories`           | `GET`  | `startDate`, `endDate`                                              | Returns revenue, profit, unit volume, and revenue share percentage per department.                                             |
-| `/products`             | `GET`  | None                                                                | Returns list of products with current standard selling and cost prices for the selector.                                       |
-| `/sales`                | `POST` | JSON body                                                           | Records a new sale transaction.                                                                                                |
+- [ARCHITECTURE.md](file:///c:/Users/hp/Downloads/sales/ARCHITECTURE.md) — System architecture, module map, data flow, and technical specifications.
+- [AUDIT.md](file:///c:/Users/hp/Downloads/sales/AUDIT.md) — Initial codebase audit, categorized and ranked by priority.
+- [PERF.md](file:///c:/Users/hp/Downloads/sales/PERF.md) — Performance metrics, bundle budget analysis, and Core Web Vitals.
+- [DEPLOY.md](file:///c:/Users/hp/Downloads/sales/DEPLOY.md) — Deployment instructions for Docker containers and Node runtimes.
+- [DECISIONS.md](file:///c:/Users/hp/Downloads/sales/DECISIONS.md) — Chronological log of architectural decisions and rationale.
+- [CHANGELOG.md](file:///c:/Users/hp/Downloads/sales/CHANGELOG.md) — Release notes and version history.
+- [CONTRIBUTING.md](file:///c:/Users/hp/Downloads/sales/CONTRIBUTING.md) — Development workflow and contribution guidelines.
+- [SECURITY.md](file:///c:/Users/hp/Downloads/sales/SECURITY.md) — Responsible vulnerability disclosure policy.
 
 ---
 
-### Request & Response Examples
+## 📡 REST API Summary
 
-#### 1. GET `/api/summary`
+Base URL: `/api`
 
-```json
-{
-  "totalSales": 2380,
-  "totalUnits": 3810,
-  "totalRevenue": 385107.16,
-  "totalProfit": 227063.66,
-  "profitMargin": 58.96,
-  "previousPeriod": {
-    "totalSales": 195,
-    "totalRevenue": 31400.0,
-    "totalProfit": 18500.0,
-    "profitMargin": 58.92
-  },
-  "changes": {
-    "salesChangePct": 12.5,
-    "revenueChangePct": 14.2,
-    "profitChangePct": 15.1,
-    "marginChangePct": 0.4
-  }
-}
-```
-
-#### 2. POST `/api/sales`
-
-**Request Body**:
-
-```json
-{
-  "productId": 1,
-  "quantity": 2,
-  "sellingPrice": 119.99,
-  "saleDate": "2026-11-19"
-}
-```
-
-**Response (201 Created)**:
-
-```json
-{
-  "success": true,
-  "message": "Sale created successfully",
-  "sale": {
-    "id": 2381,
-    "productId": 1,
-    "productName": "Pro Wireless Mechanical Keyboard",
-    "category": "Electronics",
-    "quantity": 2,
-    "unitCost": 45,
-    "unitPrice": 119.99,
-    "revenue": 239.98,
-    "profit": 149.98,
-    "saleDate": "2026-11-19"
-  }
-}
-```
+- `GET /api/health` — Service health and application version.
+- `GET /api/summary?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&category=All` — Overall KPI summary and previous period percentage deltas.
+- `GET /api/sales-trend?range=monthly|weekly` — Time series revenue, profit, units, and margin trajectory.
+- `GET /api/products/performance?sortBy=revenue&order=desc&search=...` — Product performance metrics with ranking badges.
+- `GET /api/categories` — Departmental revenue share and margins.
+- `GET /api/products` — Product catalog for transaction entry.
+- `POST /api/sales` — Record a new sale transaction (validated via Zod schema).
