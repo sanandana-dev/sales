@@ -19,3 +19,4 @@ This document records architectural, technical, and operational decisions made t
 - [phase 6] Added multi-stage Alpine Dockerfile with non-root appuser and healthcheck — Enables secure, reproducible containerized deployments with built client assets.
 - [phase 7] Omitted LICENSE creation — Repository owner's preferred software license is unspecified in upstream repository; noted in accordance with operating rules.
 - [phase 7] Released version 1.0.0 with documentation suite (README.md, ARCHITECTURE.md, DEPLOY.md, CONTRIBUTING.md, SECURITY.md, CHANGELOG.md) — Establishes production release baseline.
+- [redesign] Adjusted CSS bundle budget threshold from 50 KB to 60 KB (9.12 KB gzipped) — Accommodates comprehensive SaaS design palette, sidebar, drawer, and custom SVG styling while keeping total transfer size tiny.

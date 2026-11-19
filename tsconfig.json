@@ -14,13 +14,6 @@
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": [
-    "client/src/**/*",
-    "server/src/**/*",
-    "shared/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "client/dist"
-  ]
+  "include": ["client/src/**/*", "server/src/**/*", "shared/**/*"],
+  "exclude": ["node_modules", "client/dist"]
 }

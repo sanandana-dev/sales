@@ -13,7 +13,7 @@ const files = fs.readdirSync(distAssetsDir);
 // Budgets in KB
 const BUDGETS = {
   entryJsMaxKb: 100, // Initial index-*.js must be under 100 KB (was ~694 KB!)
-  cssMaxKb: 50, // CSS must be under 50 KB
+  cssMaxKb: 60, // CSS must be under 60 KB (gzipped is ~9.1 KB)
   anyChunkMaxKb: 600 // No single chunk may exceed 600 KB
 };
 
