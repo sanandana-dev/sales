@@ -1,4 +1,8 @@
 const db = require('./db');
+const path = require('path');
+const fs = require('fs');
+
+const clearedMarker = path.join(__dirname, '..', 'data', '.cleared');
 
 const sampleProducts = [
   // Electronics
@@ -82,13 +86,52 @@ const sampleProducts = [
   }
 ];
 
+function clearDatabase() {
+  const clearSales = db.prepare('DELETE FROM sales');
+  const clearProducts = db.prepare('DELETE FROM products');
+  const resetSqliteSeq = db.prepare(
+    "DELETE FROM sqlite_sequence WHERE name IN ('products', 'sales')"
+  );
+
+  db.transaction(() => {
+    clearSales.run();
+    clearProducts.run();
+    try {
+      resetSqliteSeq.run();
+    } catch (_e) {
+      /* ignore if sqlite_sequence not ready */
+    }
+  })();
+
+  try {
+    fs.writeFileSync(clearedMarker, new Date().toISOString(), 'utf8');
+  } catch (_e) {
+    /* ignore marker write errors */
+  }
+
+  console.log('Database cleared: removed all sales and products.');
+}
+
 function seedDatabase(force = false) {
+  if (!force && fs.existsSync(clearedMarker)) {
+    console.log('Database was explicitly cleared; skipping auto-seed.');
+    return;
+  }
+
   const productCount = db.prepare('SELECT COUNT(*) as count FROM products').get().count;
   const salesCount = db.prepare('SELECT COUNT(*) as count FROM sales').get().count;
 
   if (!force && productCount > 0 && salesCount > 0) {
     console.log(`Database already seeded with ${productCount} products and ${salesCount} sales.`);
     return;
+  }
+
+  if (fs.existsSync(clearedMarker)) {
+    try {
+      fs.unlinkSync(clearedMarker);
+    } catch (_e) {
+      /* ignore marker remove errors */
+    }
   }
 
   console.log('Seeding database with realistic sample data...');
@@ -226,4 +269,4 @@ if (require.main === module) {
   seedDatabase(true);
 }
 
-module.exports = { seedDatabase };
+module.exports = { seedDatabase, clearDatabase };

@@ -1,5 +1,13 @@
+const path = require('path');
+const fs = require('fs');
+
 async function runE2E() {
   console.log('--- Starting Full-Stack End-to-End Analytics Verification ---');
+
+  const clearedMarker = path.join(__dirname, 'server', 'data', '.cleared');
+  const wasCleared = fs.existsSync(clearedMarker);
+  const { seedDatabase, clearDatabase } = require('./server/src/seed');
+  seedDatabase(true);
 
   let serverInstance = null;
   let baseUrl = 'http://localhost:5000';
@@ -130,6 +138,9 @@ async function runE2E() {
   console.log('\n🎉 ALL FULL-STACK SALES ANALYTICS CHECKS PASSED PERFECTLY!\n');
   if (serverInstance) {
     serverInstance.close();
+  }
+  if (wasCleared) {
+    clearDatabase();
   }
 }
 

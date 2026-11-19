@@ -18,6 +18,8 @@ export default function Sidebar({
   activeNav = 'dashboard',
   onSelectNav,
   onOpenAdvanced,
+  onClearData,
+  onResetData,
   isMobileOpen = false,
   onCloseMobile
 }) {
@@ -104,6 +106,24 @@ export default function Sidebar({
             >
               <span>Upgrade Plan</span>
               <ArrowUpRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Quick Data Actions */}
+          <div className="pt-2 border-t border-[#1E2436] flex items-center justify-between gap-1.5 text-[10px]">
+            <button
+              onClick={onClearData}
+              className="flex-1 py-1 px-1 rounded-lg text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-500/30 text-center font-medium transition"
+              title="Clear all demo data from database"
+            >
+              Clear Data
+            </button>
+            <button
+              onClick={onResetData}
+              className="flex-1 py-1 px-1 rounded-lg text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 text-center font-medium transition"
+              title="Reset to 12-month sample dataset"
+            >
+              Reset Demo
             </button>
           </div>
 

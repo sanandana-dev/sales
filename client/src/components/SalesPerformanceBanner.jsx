@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowUpRight, TrendingUp } from 'lucide-react';
 
-export default function SalesPerformanceBanner({ growthPct = 12 }) {
+export default function SalesPerformanceBanner({ growthPct = 12, hasSales = true }) {
   return (
     <section
       aria-label="Sales Performance Highlight"
@@ -25,19 +25,36 @@ export default function SalesPerformanceBanner({ growthPct = 12 }) {
         <div className="max-w-md">
           <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-[#FF901E]/15 border border-[#FF901E]/30 text-[#FF901E] text-[11px] font-bold mb-2">
             <TrendingUp className="w-3 h-3" />
-            <span>Monthly Performance Pulse</span>
+            <span>{hasSales ? 'Sales Performance Pulse' : 'Clean Dashboard Ready'}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-            Your Sales{' '}
-            <span className="text-[#FF901E] inline-flex items-center gap-1">
-              On the Rise!
-              <ArrowUpRight className="w-6 h-6 stroke-[3]" />
-            </span>
+            {hasSales ? (
+              <>
+                Your Sales{' '}
+                <span className="text-[#FF901E] inline-flex items-center gap-1">
+                  On the Rise!
+                  <ArrowUpRight className="w-6 h-6 stroke-[3]" />
+                </span>
+              </>
+            ) : (
+              <>
+                SalesPulse{' '}
+                <span className="text-[#FF901E] inline-flex items-center gap-1">
+                  Ready to Track
+                </span>
+              </>
+            )}
           </h1>
           <p className="text-xs sm:text-sm text-[#8E9DB2] mt-1.5 leading-relaxed font-normal">
-            Performance is up by{' '}
-            <span className="text-emerald-400 font-semibold">{growthPct}%</span> compared to last
-            month.
+            {hasSales ? (
+              <>
+                Performance is up by{' '}
+                <span className="text-emerald-400 font-semibold">{growthPct}%</span> compared to
+                previous period.
+              </>
+            ) : (
+              'All demo data has been cleared. Click "Import" above or record a transaction to visualize live metrics.'
+            )}
           </p>
         </div>
 

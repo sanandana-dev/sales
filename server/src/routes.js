@@ -518,6 +518,21 @@ router.post('/reset', (_req, res) => {
   }
 });
 
+// 7b. POST /api/clear — Clear all sales transactions and products
+router.post('/clear', (_req, res) => {
+  try {
+    const { clearDatabase } = require('./seed');
+    clearDatabase();
+    res.json({
+      success: true,
+      message: 'All demo data (sales and products) cleared successfully!'
+    });
+  } catch (error) {
+    console.error('Error in /api/clear:', error);
+    res.status(500).json({ error: 'Failed to clear database', code: 'CLEAR_ERROR' });
+  }
+});
+
 // 8. POST /api/upload — Process batch parsed Excel / CSV rows
 router.post('/upload', (req, res) => {
   try {
@@ -1098,6 +1113,24 @@ router.get('/analytics/takeaways', (req, res) => {
       .get(...params);
 
     const takeaways = [];
+
+    if (!summaryRow.totalOrders || summaryRow.totalOrders === 0) {
+      takeaways.push({
+        type: 'revenue',
+        title: 'Ready for Live Sales Data',
+        text: 'All demo data is currently cleared. Click "Import" above to upload an Excel/CSV spreadsheet or "Record Sale" to enter transactions.'
+      });
+      takeaways.push({
+        type: 'action',
+        title: 'Instant Business Insights',
+        text: 'As soon as sales are recorded, dynamic profit margins, top earners, and velocity tips will generate here automatically.'
+      });
+      return res.json({
+        takeaways,
+        margin: 0,
+        profitKeptPer100: 0
+      });
+    }
 
     // 1. Overall momentum
     takeaways.push({

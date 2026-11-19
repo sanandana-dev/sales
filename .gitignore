@@ -12,6 +12,7 @@ build/
 *.log
 *.sqlite-wal
 *.sqlite-shm
+.cleared
 
 # OS & Editor
 .DS_Store

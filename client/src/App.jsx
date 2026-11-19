@@ -18,7 +18,9 @@ import {
   fetchProducts,
   fetchProductMatrix,
   fetchPeakTimes,
-  fetchSlowMoving
+  fetchSlowMoving,
+  clearAllData,
+  resetSampleData
 } from './api';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -43,6 +45,8 @@ export default function App() {
   // Modal States
   const [isAddSaleOpen, setIsAddSaleOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Data States
   const [summary, setSummary] = useState(null);
@@ -139,6 +143,48 @@ export default function App() {
     }
   };
 
+  const handleClearAllData = async () => {
+    if (
+      !window.confirm(
+        'Are you sure you want to clear all sales and demo data from the database? This cannot be undone.'
+      )
+    ) {
+      return;
+    }
+    setIsClearing(true);
+    try {
+      await clearAllData();
+      setRangePreset('all');
+      setStartDate('');
+      setEndDate('');
+      setSearch('');
+      await loadData(false);
+    } catch (err) {
+      alert(`Clear failed: ${err.message}`);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleResetDemoData = async () => {
+    if (!window.confirm('Reset database to the 12-month sample dataset?')) {
+      return;
+    }
+    setIsResetting(true);
+    try {
+      await resetSampleData();
+      setRangePreset('all');
+      setStartDate('');
+      setEndDate('');
+      setSearch('');
+      await loadData(false);
+    } catch (err) {
+      alert(`Reset failed: ${err.message}`);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F5F6F8] dark:bg-[#0B0F19] text-[#172033] dark:text-[#E2E8F0] flex transition-colors font-sans antialiased">
       {/* 1. Left Fixed Sidebar */}
@@ -146,6 +192,8 @@ export default function App() {
         activeNav={activeNav}
         onSelectNav={handleNavClick}
         onOpenAdvanced={() => setIsAdvancedOpen(true)}
+        onClearData={handleClearAllData}
+        onResetData={handleResetDemoData}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
@@ -160,6 +208,10 @@ export default function App() {
           setSearch={setSearch}
           onOpenAddSale={() => setIsAddSaleOpen(true)}
           onOpenUpload={() => setIsUploadOpen(true)}
+          onClearData={handleClearAllData}
+          onResetDemoData={handleResetDemoData}
+          isClearing={isClearing}
+          isResetting={isResetting}
           onToggleMobileSidebar={() => setIsMobileSidebarOpen(prev => !prev)}
         />
 
@@ -187,7 +239,10 @@ export default function App() {
 
           {/* 3. Sales Performance Header Banner */}
           <div className="mb-5">
-            <SalesPerformanceBanner growthPct={12} />
+            <SalesPerformanceBanner
+              growthPct={summary?.changes?.revenueChangePct || 0}
+              hasSales={Boolean(summary && summary.totalSales > 0)}
+            />
           </div>
 
           {/* 4. Top Row of 4 KPI Cards */}

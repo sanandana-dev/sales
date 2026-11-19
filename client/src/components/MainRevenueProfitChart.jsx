@@ -9,6 +9,7 @@ import {
   Tooltip,
   CartesianGrid
 } from 'recharts';
+import { TrendingUp } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import analytics from '../../../shared/analytics';
 
@@ -61,18 +62,10 @@ export default function MainRevenueProfitChart({
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // Sample initial reference points if trendData is loading
-  const displayData =
-    trendData.length > 0
-      ? trendData
-      : [
-          { label: 'Jan', revenue: 45000, profit: 26000 },
-          { label: 'Feb', revenue: 52000, profit: 31000 },
-          { label: 'Mar', revenue: 48000, profit: 28000 },
-          { label: 'Apr', revenue: 61000, profit: 37000 },
-          { label: 'May', revenue: 58000, profit: 34000 },
-          { label: 'Jun', revenue: 68000, profit: 41000 }
-        ];
+  const hasData = Boolean(
+    trendData && trendData.length > 0 && trendData.some(d => (d.revenue || 0) > 0)
+  );
+  const displayData = hasData ? trendData : [];
 
   const formatYAxis = val => {
     if (val >= 1000) return `$${(val / 1000).toFixed(0)}k`;
@@ -126,6 +119,19 @@ export default function MainRevenueProfitChart({
       {loading ? (
         <div className="h-64 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF901E]" />
+        </div>
+      ) : !hasData ? (
+        <div className="h-64 w-full flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-slate-200 dark:border-[#27314C] rounded-xl bg-slate-50/50 dark:bg-[#1B2236]/40">
+          <div className="w-10 h-10 rounded-full bg-[#FF901E]/10 text-[#FF901E] flex items-center justify-center mb-2.5">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+            No sales recorded for this period
+          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm">
+            Import an Excel or CSV file, or click &quot;Record Sale&quot; to begin tracking revenue
+            and profit trends.
+          </p>
         </div>
       ) : (
         <div className="h-64 w-full">

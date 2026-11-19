@@ -11,12 +11,16 @@ import { ResponsiveContainer, AreaChart, Area } from 'recharts';
 import analytics from '../../../shared/analytics';
 
 // Mini Sparkline component using Recharts
-function MiniSparkline({ data = [], color = '#FF901E' }) {
-  // Generate a fallback upward trend if series is short
+function MiniSparkline({ data = [], color = '#FF901E', hasOrders = true }) {
+  // Flat line if no active orders; otherwise slice trend data
   const chartData =
-    data.length >= 4
-      ? data.slice(-7).map((d, i) => ({ v: d.revenue || d.profit || d.salesCount || (i + 1) * 10 }))
-      : [{ v: 12 }, { v: 19 }, { v: 15 }, { v: 24 }, { v: 22 }, { v: 31 }, { v: 38 }];
+    !hasOrders || data.length === 0
+      ? [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }]
+      : data.length >= 4
+        ? data
+            .slice(-7)
+            .map((d, i) => ({ v: d.revenue || d.profit || d.salesCount || (i + 1) * 10 }))
+        : [{ v: 12 }, { v: 19 }, { v: 15 }, { v: 24 }, { v: 22 }, { v: 31 }, { v: 38 }];
 
   return (
     <div className="w-16 h-8 shrink-0">
@@ -86,19 +90,36 @@ function CircularProgress({ percentage = 58.6, size = 38, strokeWidth = 3.5, col
 export default function KPICardsRow({ summary, trendData = [], loading }) {
   const formatCur = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
 
-  const totalSalesVal = summary?.totalSales
-    ? `${summary.totalSales.toLocaleString()} Orders`
-    : '2,337 Orders';
-  const totalRevVal = summary?.totalRevenue ? formatCur(summary.totalRevenue) : '$395,600';
-  const totalProfitVal = summary?.totalProfit ? formatCur(summary.totalProfit) : '$231,939';
-  const marginVal = Number((summary?.profitMargin || 58.6).toFixed(1));
+  const hasOrders = Boolean(summary && summary.totalSales > 0);
+  const totalSalesVal = summary
+    ? `${(summary.totalSales || 0).toLocaleString()} Orders`
+    : '0 Orders';
+  const totalRevVal = summary ? formatCur(summary.totalRevenue || 0) : '$0';
+  const totalProfitVal = summary ? formatCur(summary.totalProfit || 0) : '$0';
+  const marginVal = Number((summary?.profitMargin || 0).toFixed(1));
+
+  const salesGrowth =
+    hasOrders && summary?.changes?.salesChangePct !== undefined
+      ? summary.changes.salesChangePct
+      : 0;
+  const revGrowth =
+    hasOrders && summary?.changes?.revenueChangePct !== undefined
+      ? summary.changes.revenueChangePct
+      : 0;
+  const profitGrowth =
+    hasOrders && summary?.changes?.profitChangePct !== undefined
+      ? summary.changes.profitChangePct
+      : 0;
+  const marginGrowth =
+    hasOrders && summary?.changes?.marginChangePct !== undefined
+      ? summary.changes.marginChangePct
+      : 0;
 
   const cards = [
     {
       title: 'Total Sales',
       value: totalSalesVal,
-      growth:
-        summary?.changes?.salesChangePct !== undefined ? summary.changes.salesChangePct : 12.5,
+      growth: salesGrowth,
       accentColor: '#FF901E',
       icon: ShoppingCart,
       iconBg: 'bg-[#FF901E]/10 text-[#FF901E]',
@@ -107,8 +128,7 @@ export default function KPICardsRow({ summary, trendData = [], loading }) {
     {
       title: 'Total Revenue',
       value: totalRevVal,
-      growth:
-        summary?.changes?.revenueChangePct !== undefined ? summary.changes.revenueChangePct : 14.2,
+      growth: revGrowth,
       accentColor: '#2563EB',
       icon: DollarSign,
       iconBg: 'bg-[#2563EB]/10 text-[#2563EB]',
@@ -117,8 +137,7 @@ export default function KPICardsRow({ summary, trendData = [], loading }) {
     {
       title: 'Total Net Profit',
       value: totalProfitVal,
-      growth:
-        summary?.changes?.profitChangePct !== undefined ? summary.changes.profitChangePct : 13.7,
+      growth: profitGrowth,
       accentColor: '#7C3AED',
       icon: BarChart2,
       iconBg: 'bg-[#7C3AED]/10 text-[#7C3AED]',
@@ -127,8 +146,7 @@ export default function KPICardsRow({ summary, trendData = [], loading }) {
     {
       title: 'Profit Margin',
       value: `${marginVal}%`,
-      growth:
-        summary?.changes?.marginChangePct !== undefined ? summary.changes.marginChangePct : 2.3,
+      growth: marginGrowth,
       accentColor: '#159B67',
       icon: Percent,
       iconBg: 'bg-[#159B67]/10 text-[#159B67]',
@@ -167,7 +185,7 @@ export default function KPICardsRow({ summary, trendData = [], loading }) {
                 {c.chartType === 'circle' ? (
                   <CircularProgress percentage={marginVal} color={c.accentColor} />
                 ) : (
-                  <MiniSparkline data={trendData} color={c.accentColor} />
+                  <MiniSparkline data={trendData} color={c.accentColor} hasOrders={hasOrders} />
                 )}
               </div>
 

@@ -1,6 +1,13 @@
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 
 async function testBackend() {
+  const clearedMarker = path.join(__dirname, 'data', '.cleared');
+  const wasCleared = fs.existsSync(clearedMarker);
+  const { seedDatabase, clearDatabase } = require('./src/seed');
+  seedDatabase(true);
+
   const { app, server: runningServer } = require('./src/index');
   const server = runningServer || app.listen(0);
   const address = server.address();
@@ -133,6 +140,9 @@ async function testBackend() {
     console.error('❌ Test failed:', err);
     process.exitCode = 1;
   } finally {
+    if (wasCleared) {
+      clearDatabase();
+    }
     server.close();
   }
 }

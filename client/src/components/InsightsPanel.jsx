@@ -16,43 +16,77 @@ function TinySpark({ color = '#159B67', points = [10, 15, 12, 18, 22, 28] }) {
 }
 
 export default function InsightsPanel({ summary, topProduct, onViewAll }) {
+  const hasSales = Boolean(summary && summary.totalSales > 0);
   const salesPct =
-    summary?.changes?.salesChangePct !== undefined ? summary.changes.salesChangePct : 12.5;
-  const topProdName = topProduct?.name || 'Laptop Pro';
-  const topProdShare = topProduct?.revenueSharePct || 32;
+    summary?.changes?.salesChangePct !== undefined ? summary.changes.salesChangePct : 0;
+  const topProdName = topProduct?.name || 'No sales yet';
+  const topProdShare = topProduct?.revenueSharePct || 0;
 
-  const insights = [
-    {
-      id: 1,
-      title: `Sales increased by ${salesPct}%`,
-      subtitle: 'Compared to last month.',
-      icon: TrendingUp,
-      iconColor: 'text-[#159B67]',
-      iconBg: 'bg-[#159B67]/20',
-      sparkColor: '#159B67',
-      points: [8, 14, 12, 19, 21, 27]
-    },
-    {
-      id: 2,
-      title: `Top Product: ${topProdName}`,
-      subtitle: `${topProdShare}% of total sales.`,
-      icon: Trophy,
-      iconColor: 'text-[#FF901E]',
-      iconBg: 'bg-[#FF901E]/20',
-      sparkColor: '#FF901E',
-      points: [15, 18, 16, 24, 26, 32]
-    },
-    {
-      id: 3,
-      title: 'New Customers: 1,250',
-      subtitle: '+18% vs last month.',
-      icon: Users,
-      iconColor: 'text-[#7C3AED]',
-      iconBg: 'bg-[#7C3AED]/20',
-      sparkColor: '#7C3AED',
-      points: [10, 12, 15, 14, 20, 24]
-    }
-  ];
+  const insights = hasSales
+    ? [
+        {
+          id: 1,
+          title: `Sales ${salesPct >= 0 ? 'increased' : 'decreased'} by ${Math.abs(salesPct)}%`,
+          subtitle: 'Compared to previous period.',
+          icon: TrendingUp,
+          iconColor: salesPct >= 0 ? 'text-[#159B67]' : 'text-[#E11D48]',
+          iconBg: salesPct >= 0 ? 'bg-[#159B67]/20' : 'bg-[#E11D48]/20',
+          sparkColor: salesPct >= 0 ? '#159B67' : '#E11D48',
+          points: [8, 14, 12, 19, 21, 27]
+        },
+        {
+          id: 2,
+          title: `Top Product: ${topProdName}`,
+          subtitle: `${topProdShare}% of total sales.`,
+          icon: Trophy,
+          iconColor: 'text-[#FF901E]',
+          iconBg: 'bg-[#FF901E]/20',
+          sparkColor: '#FF901E',
+          points: [15, 18, 16, 24, 26, 32]
+        },
+        {
+          id: 3,
+          title: `Active Orders: ${(summary?.totalSales || 0).toLocaleString()}`,
+          subtitle: `${(summary?.totalUnits || 0).toLocaleString()} total items sold.`,
+          icon: Users,
+          iconColor: 'text-[#7C3AED]',
+          iconBg: 'bg-[#7C3AED]/20',
+          sparkColor: '#7C3AED',
+          points: [10, 12, 15, 14, 20, 24]
+        }
+      ]
+    : [
+        {
+          id: 1,
+          title: 'Demo Data Cleared',
+          subtitle: 'Ready for live transaction data.',
+          icon: TrendingUp,
+          iconColor: 'text-[#8E9DB2]',
+          iconBg: 'bg-white/10',
+          sparkColor: '#8E9DB2',
+          points: [0, 0, 0, 0, 0, 0]
+        },
+        {
+          id: 2,
+          title: 'No Top Product Yet',
+          subtitle: 'Add sales to identify top earners.',
+          icon: Trophy,
+          iconColor: 'text-[#8E9DB2]',
+          iconBg: 'bg-white/10',
+          sparkColor: '#8E9DB2',
+          points: [0, 0, 0, 0, 0, 0]
+        },
+        {
+          id: 3,
+          title: 'Awaiting Orders',
+          subtitle: 'Import CSV/Excel to view trends.',
+          icon: Users,
+          iconColor: 'text-[#8E9DB2]',
+          iconBg: 'bg-white/10',
+          sparkColor: '#8E9DB2',
+          points: [0, 0, 0, 0, 0, 0]
+        }
+      ];
 
   return (
     <div className="bg-[#151927] border border-[#27314C] rounded-2xl p-5 shadow-xs text-white flex flex-col justify-between">

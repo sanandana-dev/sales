@@ -87,6 +87,13 @@ export async function resetSampleData() {
   return handleResponse(res);
 }
 
+export async function clearAllData() {
+  const res = await fetch(`${API_BASE}/clear`, {
+    method: 'POST'
+  });
+  return handleResponse(res);
+}
+
 export async function fetchPeakTimes(params = {}) {
   const query = new URLSearchParams();
   if (params.startDate) query.append('startDate', params.startDate);
