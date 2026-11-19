@@ -11,3 +11,5 @@ This document records architectural, technical, and operational decisions made t
 - [phase 2] Enforced 80% coverage threshold gate via test/coverage-gate.js — Ensures regressions in core business logic fail the check pipeline.
 - [phase 3] Added zod runtime validation schemas and helmet/rate-limiting security middleware — Rejects invalid input with structured 400 responses and protects server against payload injection and rate abuse.
 - [phase 3] Added ErrorBoundary component to client and sanitized logging to server — Prevents blank screens on render crashes and prevents secrets from being logged.
+- [phase 4] Added automated axe-core WCAG 2.1 AA accessibility audit to test suite for 390x844 and 1280x800 viewports — Ensures zero serious or critical a11y violations across mobile and desktop.
+- [phase 4] Added tabular-nums, accessible dialog markup, labeled controls, 44px tap targets, and prefers-reduced-motion media query — Satisfies WCAG AA contrast, keyboard accessibility, and screen reader compatibility.

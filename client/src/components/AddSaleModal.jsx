@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Calculator, CheckCircle2, AlertCircle } from 'lucide-react';
 import { createSale } from '../api';
 import analytics from '../../../shared/analytics';
+import { createSaleSchema } from '../../../shared/schemas';
 
 export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCreated }) {
   const [productId, setProductId] = useState('');
@@ -11,6 +12,8 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const modalRef = useRef(null);
+  const initialFocusRef = useRef(null);
 
   // Set default product when products list is available
   useEffect(() => {
@@ -20,7 +23,24 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
     }
   }, [products, productId]);
 
-  // Update default selling price when selected product changes
+  // Trap focus and handle Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = e => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    if (initialFocusRef.current) {
+      initialFocusRef.current.focus();
+    }
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleProductChange = id => {
     setProductId(id);
     const prod = products.find(p => p.id === Number(id));
@@ -31,7 +51,6 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
 
   const selectedProduct = products.find(p => p.id === Number(productId));
 
-  // Calculations for live preview using pure business logic functions
   const currentPrice = parseFloat(sellingPrice) || selectedProduct?.sellingPrice || 0;
   const currentCost = selectedProduct?.costPrice || 0;
   const currentQty = parseInt(quantity, 10) || 1;
@@ -45,23 +64,22 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
     setError(null);
     setSuccessMsg(null);
 
-    if (!productId) {
-      setError('Please select a product.');
-      return;
-    }
-    if (!quantity || quantity < 1) {
-      setError('Quantity must be at least 1.');
+    // Validate using Zod schema before sending
+    const validation = createSaleSchema.safeParse({
+      productId: Number(productId),
+      quantity: Number(quantity),
+      sellingPrice: Number(currentPrice),
+      saleDate
+    });
+
+    if (!validation.success) {
+      setError(validation.error.errors[0]?.message || 'Please correct the form fields.');
       return;
     }
 
     try {
       setSubmitting(true);
-      const res = await createSale({
-        productId: Number(productId),
-        quantity: Number(quantity),
-        sellingPrice: Number(currentPrice),
-        saleDate
-      });
+      const res = await createSale(validation.data);
 
       setSuccessMsg(
         `Sale recorded! Revenue: $${res.sale.revenue.toFixed(2)}, Profit: $${res.sale.profit.toFixed(2)}`
@@ -71,7 +89,6 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
         onSaleCreated(res.sale);
       }
 
-      // Close modal after short delay
       setTimeout(() => {
         setSuccessMsg(null);
         onClose();
@@ -86,16 +103,27 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 w-full max-w-lg shadow-2xl overflow-hidden transition-all">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
+    >
+      <div
+        ref={modalRef}
+        className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 w-full max-w-lg shadow-2xl overflow-hidden transition-all"
+      >
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div
+              className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center"
+              aria-hidden="true"
+            >
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+              <h3 id="modal-title" className="font-bold text-base text-slate-900 dark:text-white">
                 Record New Sale
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -105,37 +133,49 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            aria-label="Close dialog"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition focus-visible:ring-2 focus-visible:ring-blue-500"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Modal Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div
+              role="alert"
+              className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div
+              role="status"
+              className="p-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs flex items-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>{successMsg}</span>
             </div>
           )}
 
           {/* Product Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Select Product *
+            <label
+              htmlFor="sale-product-select"
+              className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+            >
+              Select Product <span className="text-rose-500">*</span>
             </label>
             <select
+              id="sale-product-select"
+              ref={initialFocusRef}
               value={productId}
               onChange={e => handleProductChange(e.target.value)}
-              className="w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="min-h-[42px] w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white focus-visible:ring-2 focus-visible:ring-blue-500"
               required
             >
               {products.map(p => (
@@ -149,30 +189,36 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
           {/* Quantity & Unit Price in 2 cols */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Quantity *
+              <label
+                htmlFor="sale-quantity-input"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+              >
+                Quantity <span className="text-rose-500">*</span>
               </label>
               <div className="flex items-center">
                 <button
                   type="button"
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="px-2.5 py-2 bg-slate-100 dark:bg-slate-800 border border-r-0 border-slate-200 dark:border-slate-700 rounded-l-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                  aria-label="Decrease quantity"
+                  className="min-h-[42px] px-3 bg-slate-100 dark:bg-slate-800 border border-r-0 border-slate-200 dark:border-slate-700 rounded-l-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   -
                 </button>
                 <input
+                  id="sale-quantity-input"
                   type="number"
                   min="1"
                   max="1000"
                   value={quantity}
                   onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-full text-center text-xs bg-slate-50 dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 py-2 text-slate-900 dark:text-white focus:outline-none"
+                  className="min-h-[42px] w-full text-center text-xs bg-slate-50 dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 py-2 text-slate-900 dark:text-white focus-visible:ring-2 focus-visible:ring-blue-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setQuantity(q => q + 1)}
-                  className="px-2.5 py-2 bg-slate-100 dark:bg-slate-800 border border-l-0 border-slate-200 dark:border-slate-700 rounded-r-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                  aria-label="Increase quantity"
+                  className="min-h-[42px] px-3 bg-slate-100 dark:bg-slate-800 border border-l-0 border-slate-200 dark:border-slate-700 rounded-r-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   +
                 </button>
@@ -180,20 +226,27 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="sale-price-input"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Selling Price ($)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                <span
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"
+                  aria-hidden="true"
+                >
                   $
                 </span>
                 <input
+                  id="sale-price-input"
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={sellingPrice}
                   onChange={e => setSellingPrice(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="min-h-[42px] w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus-visible:ring-2 focus-visible:ring-blue-500 tabular-nums"
                   required
                 />
               </div>
@@ -202,14 +255,18 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
 
           {/* Sale Date */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Sale Date *
+            <label
+              htmlFor="sale-date-input"
+              className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+            >
+              Sale Date <span className="text-rose-500">*</span>
             </label>
             <input
+              id="sale-date-input"
               type="date"
               value={saleDate}
               onChange={e => setSaleDate(e.target.value)}
-              className="w-full p-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="min-h-[42px] w-full p-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus-visible:ring-2 focus-visible:ring-blue-500"
               required
             />
           </div>
@@ -217,10 +274,10 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
           {/* Real-time Calculation Summary Box */}
           <div className="bg-slate-50 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2.5">
-              <Calculator className="w-3.5 h-3.5 mr-1 text-blue-500" />
-              Live Margin Calculation
+              <Calculator className="w-3.5 h-3.5 mr-1 text-blue-500" aria-hidden="true" />
+              <span>Live Margin Calculation</span>
             </div>
-            <div className="grid grid-cols-4 gap-2 text-center text-xs">
+            <div className="grid grid-cols-4 gap-2 text-center text-xs tabular-nums">
               <div className="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
                 <div className="text-[10px] text-slate-400">Total Rev</div>
                 <div className="font-bold text-blue-600 dark:text-blue-400">${estRevenue}</div>
@@ -246,23 +303,23 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+              className="min-h-[44px] px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50"
+              className="min-h-[44px] flex items-center space-x-1.5 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               {submitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white mr-1.5"></div>
                   <span>Saving...</span>
                 </>
               ) : (
                 <>
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Submit Sale</span>
                 </>
               )}

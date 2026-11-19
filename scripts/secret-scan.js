@@ -13,8 +13,7 @@ const secretPatterns = [
   { name: 'GitHub Token', regex: /gh[pousr]_[A-Za-z0-9_]{36,255}/ },
   {
     name: 'Generic Secret Assignment',
-    regex:
-      /(api_key|apikey|secret|password|passwd|auth_token)\s*[:=]\s*['"][A-Za-z0-9_-]{16,}['"]/i
+    regex: /(api_key|apikey|secret|password|passwd|auth_token)\s*[:=]\s*['"][A-Za-z0-9_-]{16,}['"]/i
   }
 ];
 

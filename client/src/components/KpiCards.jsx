@@ -13,8 +13,10 @@ import analytics from '../../../shared/analytics';
 function ChangeBadge({ change, isMargin = false }) {
   if (change === null || change === undefined || isNaN(change)) {
     return (
-      <span className="inline-flex items-center text-xs font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-        <Minus className="w-3 h-3 mr-0.5" /> 0%
+      <span className="inline-flex items-center text-xs font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full tabular-nums">
+        <Minus className="w-3 h-3 mr-0.5" aria-hidden="true" />
+        <span className="sr-only">No change recorded:</span>
+        <span>0%</span>
       </span>
     );
   }
@@ -24,28 +26,38 @@ function ChangeBadge({ change, isMargin = false }) {
 
   if (isZero) {
     return (
-      <span className="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-        <Minus className="w-3 h-3 mr-0.5" /> 0%
+      <span className="inline-flex items-center text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full tabular-nums">
+        <Minus className="w-3 h-3 mr-0.5" aria-hidden="true" />
+        <span className="sr-only">No change compared to prior period:</span>
+        <span>0%</span>
       </span>
     );
   }
 
+  const unit = isMargin ? '% pts' : '%';
+  const srText = isPositive
+    ? `Increased by ${change}${unit} compared to previous period`
+    : `Decreased by ${Math.abs(change)}${unit} compared to previous period`;
+
   return (
     <span
-      className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
+      className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full tabular-nums ${
         isPositive
           ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50'
           : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50'
       }`}
     >
+      <span className="sr-only">{srText}</span>
       {isPositive ? (
-        <ArrowUpRight className="w-3 h-3 mr-0.5 stroke-[2.5]" />
+        <ArrowUpRight className="w-3 h-3 mr-0.5 stroke-[2.5]" aria-hidden="true" />
       ) : (
-        <ArrowDownRight className="w-3 h-3 mr-0.5 stroke-[2.5]" />
+        <ArrowDownRight className="w-3 h-3 mr-0.5 stroke-[2.5]" aria-hidden="true" />
       )}
-      {isPositive ? '+' : ''}
-      {change}
-      {isMargin ? '% pts' : '%'}
+      <span aria-hidden="true">
+        {isPositive ? '+' : ''}
+        {change}
+        {unit}
+      </span>
     </span>
   );
 }
@@ -94,47 +106,57 @@ export default function KpiCards({ summary, loading }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {cards.map((c, index) => {
-        const IconComponent = c.icon;
-        return (
-          <div
-            key={index}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                {c.title}
-              </span>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${c.bgColor}`}>
-                <IconComponent className="w-4 h-4" />
+    <section aria-label="Key Performance Indicators" className="mb-6">
+      <h2 className="sr-only">Executive KPI Summary</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((c, index) => {
+          const IconComponent = c.icon;
+          return (
+            <div
+              key={index}
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  {c.title}
+                </span>
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center ${c.bgColor}`}
+                  aria-hidden="true"
+                >
+                  <IconComponent className="w-4 h-4" />
+                </div>
               </div>
-            </div>
 
-            {loading ? (
-              <div className="space-y-2 animate-pulse">
-                <div className="h-7 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4"></div>
-                <div className="h-4 bg-slate-100 dark:bg-slate-800/60 rounded-md w-1/2"></div>
-              </div>
-            ) : (
-              <div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    {c.value}
+              {loading ? (
+                <div
+                  role="status"
+                  aria-label={`Loading ${c.title}`}
+                  className="space-y-2 animate-pulse"
+                >
+                  <div className="h-7 bg-slate-200 dark:bg-slate-800 rounded-md w-3/4"></div>
+                  <div className="h-4 bg-slate-100 dark:bg-slate-800/60 rounded-md w-1/2"></div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight tabular-nums">
+                      {c.value}
+                    </div>
+                    <ChangeBadge change={c.change} isMargin={c.isMargin} />
                   </div>
-                  <ChangeBadge change={c.change} isMargin={c.isMargin} />
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between tabular-nums">
+                    <span>{c.subValue}</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                      vs prev period
+                    </span>
+                  </div>
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
-                  <span>{c.subValue}</span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                    vs prev period
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
