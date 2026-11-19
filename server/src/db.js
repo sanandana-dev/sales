@@ -41,4 +41,17 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_sales_product ON sales(product_id);
 `);
 
+// Safe column additions for stock count and hourly timestamping
+try {
+  db.exec('ALTER TABLE products ADD COLUMN stock_quantity INTEGER DEFAULT 50');
+} catch (_) {
+  // column already exists
+}
+
+try {
+  db.exec("ALTER TABLE sales ADD COLUMN sale_time TEXT DEFAULT '14:00'");
+} catch (_) {
+  // column already exists
+}
+
 module.exports = db;

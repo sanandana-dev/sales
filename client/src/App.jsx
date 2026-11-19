@@ -2,6 +2,11 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import FilterBar from './components/FilterBar';
 import KpiCards from './components/KpiCards';
+import TakeawaysBanner from './components/TakeawaysBanner';
+import ProductMatrixCard from './components/ProductMatrixCard';
+import PeakTimesCard from './components/PeakTimesCard';
+import ProfitSimulatorCard from './components/ProfitSimulatorCard';
+import SlowMovingStockCard from './components/SlowMovingStockCard';
 import ProductTable from './components/ProductTable';
 import ErrorBoundary from './components/ErrorBoundary';
 import analytics from '../../shared/analytics';
@@ -10,7 +15,12 @@ import {
   fetchSalesTrend,
   fetchProductsPerformance,
   fetchCategories,
-  fetchProducts
+  fetchProducts,
+  fetchTakeaways,
+  fetchProductMatrix,
+  fetchPeakTimes,
+  fetchSlowMoving,
+  resetSampleData
 } from './api';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -19,6 +29,7 @@ const TrendChart = React.lazy(() => import('./components/TrendChart'));
 const ProductBarChart = React.lazy(() => import('./components/ProductBarChart'));
 const CategoryPieChart = React.lazy(() => import('./components/CategoryPieChart'));
 const AddSaleModal = React.lazy(() => import('./components/AddSaleModal'));
+const FileUploadModal = React.lazy(() => import('./components/FileUploadModal'));
 
 function ChartLoadingSkeleton({ height = 'h-72' }) {
   return (
@@ -48,8 +59,10 @@ export default function App() {
   const [sortBy, setSortBy] = useState('revenue');
   const [order, setOrder] = useState('desc');
 
-  // Modal State
+  // Modal States
   const [isAddSaleOpen, setIsAddSaleOpen] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Data States
   const [summary, setSummary] = useState(null);
@@ -57,13 +70,17 @@ export default function App() {
   const [productsPerformance, setProductsPerformance] = useState([]);
   const [categories, setCategories] = useState([]);
   const [productsCatalog, setProductsCatalog] = useState([]);
+  const [takeawaysData, setTakeawaysData] = useState({ takeaways: [], margin: 0 });
+  const [matrixData, setMatrixData] = useState(null);
+  const [peakData, setPeakData] = useState(null);
+  const [slowMovingData, setSlowMovingData] = useState(null);
 
   // Loading and Error States
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // Calculate dates when preset changes (BUG-06 fix: dynamic anchor, no hardcoded dates)
+  // Calculate dates when preset changes
   useEffect(() => {
     if (rangePreset === 'all') {
       setStartDate('');
@@ -96,7 +113,17 @@ export default function App() {
       };
 
       try {
-        const [summaryRes, trendRes, perfRes, catRes, catalogRes] = await Promise.all([
+        const [
+          summaryRes,
+          trendRes,
+          perfRes,
+          catRes,
+          catalogRes,
+          takeawaysRes,
+          matrixRes,
+          peakRes,
+          slowRes
+        ] = await Promise.all([
           fetchSummary(filterParams),
           fetchSalesTrend({ ...filterParams, range: trendRange }),
           fetchProductsPerformance({
@@ -106,7 +133,11 @@ export default function App() {
             order
           }),
           fetchCategories({ startDate: filterParams.startDate, endDate: filterParams.endDate }),
-          fetchProducts()
+          fetchProducts(),
+          fetchTakeaways(filterParams),
+          fetchProductMatrix(filterParams),
+          fetchPeakTimes(filterParams),
+          fetchSlowMoving()
         ]);
 
         setSummary(summaryRes);
@@ -114,6 +145,10 @@ export default function App() {
         setProductsPerformance(perfRes);
         setCategories(catRes);
         setProductsCatalog(catalogRes);
+        setTakeawaysData(takeawaysRes);
+        setMatrixData(matrixRes);
+        setPeakData(peakRes);
+        setSlowMovingData(slowRes);
       } catch (err) {
         console.error('Failed to load dashboard data:', err);
         setError(err.message || 'Error communicating with Sales API');
@@ -149,14 +184,30 @@ export default function App() {
     setOrder('desc');
   };
 
-  const handleSaleCreated = () => {
-    loadData(true);
+  const handleResetDemoData = async () => {
+    if (!window.confirm('Reset the database to the 12-month sample dataset?')) return;
+    setIsResetting(true);
+    try {
+      await resetSampleData();
+      handleResetFilters();
+      await loadData(false);
+    } catch (err) {
+      alert(`Reset error: ${err.message}`);
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
       {/* Top Navigation */}
-      <Navbar onOpenAddSale={() => setIsAddSaleOpen(true)} totalProducts={productsCatalog.length} />
+      <Navbar
+        onOpenAddSale={() => setIsAddSaleOpen(true)}
+        onOpenUpload={() => setIsUploadOpen(true)}
+        onResetData={handleResetDemoData}
+        totalProducts={productsCatalog.length}
+        isResetting={isResetting}
+      />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -196,7 +247,16 @@ export default function App() {
           onReset={handleResetFilters}
         />
 
-        {/* KPI Cards Top Row */}
+        {/* FEATURE 3: Plain-English "Today's / Period Takeaway" Summary Box */}
+        <ErrorBoundary title="Owner Takeaways Unavailable" onReset={() => loadData(false)}>
+          <TakeawaysBanner
+            takeaways={takeawaysData?.takeaways || []}
+            margin={takeawaysData?.margin || summary?.profitMargin || 0}
+            loading={loading}
+          />
+        </ErrorBoundary>
+
+        {/* FEATURE 2: KPI Cards (Revenue vs Real Profit Clarity) */}
         <ErrorBoundary title="KPI Metrics Unavailable" onReset={() => loadData(false)}>
           <KpiCards summary={summary} loading={loading} />
         </ErrorBoundary>
@@ -215,7 +275,14 @@ export default function App() {
           </ErrorBoundary>
         </div>
 
-        {/* Charts Section: Top 5 Bar & Category Donut in 2 cols */}
+        {/* FEATURE 4: Product Performance Matrix (4-Bucket Classification) */}
+        <div className="mb-6">
+          <ErrorBoundary title="Product Matrix Unavailable" onReset={() => loadData(false)}>
+            <ProductMatrixCard matrixData={matrixData} loading={loading} />
+          </ErrorBoundary>
+        </div>
+
+        {/* Top 5 Bar & Category Donut in 2 cols */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ErrorBoundary title="Product Rankings Unavailable" onReset={() => loadData(false)}>
             <Suspense fallback={<ChartLoadingSkeleton height="h-64" />}>
@@ -226,6 +293,23 @@ export default function App() {
             <Suspense fallback={<ChartLoadingSkeleton height="h-64" />}>
               <CategoryPieChart categories={categories} loading={loading} />
             </Suspense>
+          </ErrorBoundary>
+        </div>
+
+        {/* FEATURE 5 & FEATURE 6: Peak Days/Hours and "What-If" Profit Simulator in 2 cols */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <ErrorBoundary title="Peak Hours Unavailable" onReset={() => loadData(false)}>
+            <PeakTimesCard peakData={peakData} loading={loading} />
+          </ErrorBoundary>
+          <ErrorBoundary title="Profit Simulator Unavailable" onReset={() => loadData(false)}>
+            <ProfitSimulatorCard products={productsPerformance} summary={summary} />
+          </ErrorBoundary>
+        </div>
+
+        {/* FEATURE 7: Slow-Moving Stock Alert ("Cash Stuck on Shelves") */}
+        <div className="mb-6">
+          <ErrorBoundary title="Inventory Alerts Unavailable" onReset={() => loadData(false)}>
+            <SlowMovingStockCard slowMovingData={slowMovingData} loading={loading} />
           </ErrorBoundary>
         </div>
 
@@ -249,7 +333,8 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-400 dark:text-slate-500 transition-colors">
         <p>
-          Small Business Sales Analytics Dashboard • React + Vite + Tailwind CSS + Recharts + SQLite
+          SalesPulse • Small Business Sales & Margin Intelligence • React + Vite + Tailwind CSS +
+          SQLite
         </p>
       </footer>
 
@@ -260,7 +345,21 @@ export default function App() {
             isOpen={isAddSaleOpen}
             onClose={() => setIsAddSaleOpen(false)}
             products={productsCatalog}
-            onSaleCreated={handleSaleCreated}
+            onSaleCreated={() => loadData(true)}
+          />
+        </Suspense>
+      )}
+
+      {/* FEATURE 1: Excel & CSV File Upload Modal */}
+      {isUploadOpen && (
+        <Suspense fallback={null}>
+          <FileUploadModal
+            isOpen={isUploadOpen}
+            onClose={() => setIsUploadOpen(false)}
+            onDataImported={() => {
+              handleResetFilters();
+              loadData(false);
+            }}
           />
         </Suspense>
       )}

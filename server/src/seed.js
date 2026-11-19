@@ -108,18 +108,28 @@ function seedDatabase(force = false) {
       /* ignore if sqlite_sequence not ready */
     }
 
-    // Insert products
+    // Insert products with stock count
     const insertProduct = db.prepare(`
-      INSERT INTO products (name, category, cost_price, selling_price)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO products (name, category, cost_price, selling_price, stock_quantity)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     const productIds = [];
-    for (const p of sampleProducts) {
-      const info = insertProduct.run(p.name, p.category, p.cost_price, p.selling_price);
+    for (let i = 0; i < sampleProducts.length; i++) {
+      const p = sampleProducts[i];
+      // Give slow-moving socks & tumbler more stock on shelves to show cash-tied up
+      const defaultStock = i % 3 === 0 ? 65 : i % 2 === 0 ? 35 : 18;
+      const info = insertProduct.run(
+        p.name,
+        p.category,
+        p.cost_price,
+        p.selling_price,
+        p.stock_quantity || defaultStock
+      );
       productIds.push({
         id: info.lastInsertRowid,
-        ...p
+        ...p,
+        stock_quantity: defaultStock
       });
     }
 
@@ -130,11 +140,18 @@ function seedDatabase(force = false) {
     const totalDays = Math.round((endDate - startDate) / dayMs);
 
     const insertSale = db.prepare(`
-      INSERT INTO sales (product_id, quantity, unit_cost, unit_price, revenue, profit, sale_date)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO sales (product_id, quantity, unit_cost, unit_price, revenue, profit, sale_date, sale_time)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     let totalInserted = 0;
+
+    // Realistic store operating hours distribution: 10:00 to 21:00
+    const storeHours = [
+      '10:15', '11:00', '11:45', '12:30', '13:15', '13:45',
+      '14:20', '15:10', '16:00', '16:45', '17:30', '18:15',
+      '18:50', '19:30', '20:10'
+    ];
 
     for (let dayOffset = 0; dayOffset <= totalDays; dayOffset++) {
       const currentDate = new Date(startDate.getTime() + dayOffset * dayMs);
@@ -171,6 +188,7 @@ function seedDatabase(force = false) {
         const revenue = Number((quantity * product.selling_price).toFixed(2));
         const cost = Number((quantity * product.cost_price).toFixed(2));
         const profit = Number((revenue - cost).toFixed(2));
+        const saleTime = storeHours[Math.floor(Math.random() * storeHours.length)];
 
         insertSale.run(
           product.id,
@@ -179,7 +197,8 @@ function seedDatabase(force = false) {
           product.selling_price,
           revenue,
           profit,
-          dateStr
+          dateStr,
+          saleTime
         );
         totalInserted++;
       }

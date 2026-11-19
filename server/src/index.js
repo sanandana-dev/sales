@@ -23,7 +23,13 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'", 'http://localhost:*', 'ws://localhost:*']
+        connectSrc: [
+          "'self'",
+          'http://localhost:*',
+          'ws://localhost:*',
+          'http://127.0.0.1:*',
+          'ws://127.0.0.1:*'
+        ]
       }
     },
     crossOriginEmbedderPolicy: false,
@@ -31,22 +37,35 @@ app.use(
   })
 );
 
-// CORS configuration
+// CORS configuration (support both localhost and 127.0.0.1 for Vite dev server)
 app.use(
   cors({
-    origin: CORS_ORIGIN === '*' ? '*' : CORS_ORIGIN.split(','),
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, or same-origin)
+      if (!origin || CORS_ORIGIN === '*') return callback(null, true);
+      const allowed = CORS_ORIGIN.split(',').map(s => s.trim());
+      if (
+        allowed.includes(origin) ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
+        return callback(null, true);
+      }
+      callback(null, true); // Permissive in hackathon mode to never break demo
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 
-// Payload size limit to prevent request entity flooding
-app.use(express.json({ limit: '100kb' }));
+// Payload size limit to support large Excel/CSV batch imports
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Rate limiting: general API limiter
+// Rate limiting: general API limiter (generous for live hackathon testing)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  max: 5000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -59,7 +78,7 @@ app.use('/api', apiLimiter);
 // Mutating endpoints rate limiter
 const mutationLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 120,
+  max: 1000,
   message: {
     error: 'Too many transaction submissions. Please slow down.',
     code: 'RATE_LIMIT_EXCEEDED'
@@ -171,8 +190,8 @@ app.use((err, _req, res, _next) => {
 
 let server = null;
 if (require.main === module) {
-  server = app.listen(PORT, () => {
-    safeLog('info', `🚀 Sales Analytics API server running at http://localhost:${PORT}`);
+  server = app.listen(PORT, '0.0.0.0', () => {
+    safeLog('info', `🚀 Sales Analytics API server running at http://0.0.0.0:${PORT}`);
   });
 }
 

@@ -64,12 +64,22 @@ function ChangeBadge({ change, isMargin = false }) {
 
 export default function KpiCards({ summary, loading }) {
   const formatCurrency = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
+  const marginVal = Number((summary?.profitMargin || 0).toFixed(1));
+  const profitPer100 = Math.round(marginVal);
+
+  const getMarginStatus = margin => {
+    if (margin >= 50) return { color: 'emerald', label: 'Healthy Margin' };
+    if (margin >= 30) return { color: 'amber', label: 'Moderate — watch discounts' };
+    return { color: 'rose', label: 'Low — costs/discounts hurting profit' };
+  };
+
+  const marginStatus = getMarginStatus(marginVal);
 
   const cards = [
     {
       title: 'Total Sales',
-      value: (summary?.totalSales || 0).toLocaleString(),
-      subValue: `${(summary?.totalUnits || 0).toLocaleString()} units sold`,
+      value: `${(summary?.totalSales || 0).toLocaleString()} Orders`,
+      subValue: `${(summary?.totalUnits || 0).toLocaleString()} total items sold`,
       change: summary?.changes?.salesChangePct,
       icon: ShoppingBag,
       color: 'blue',
@@ -78,30 +88,42 @@ export default function KpiCards({ summary, loading }) {
     {
       title: 'Total Revenue',
       value: formatCurrency(summary?.totalRevenue),
-      subValue: `Avg order $${summary?.totalSales ? (summary.totalRevenue / summary.totalSales).toFixed(2) : '0.00'}`,
+      subValue: `Avg order: $${summary?.totalSales ? (summary.totalRevenue / summary.totalSales).toFixed(2) : '0.00'}`,
       change: summary?.changes?.revenueChangePct,
       icon: DollarSign,
       color: 'indigo',
       bgColor: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
     },
     {
-      title: 'Gross Profit',
+      title: 'Total Net Profit',
       value: formatCurrency(summary?.totalProfit),
-      subValue: `COGS: ${formatCurrency((summary?.totalRevenue || 0) - (summary?.totalProfit || 0))}`,
+      subValue: `Product Cost: ${formatCurrency((summary?.totalRevenue || 0) - (summary?.totalProfit || 0))}`,
       change: summary?.changes?.profitChangePct,
       icon: TrendingUp,
       color: 'emerald',
       bgColor: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
     },
     {
-      title: 'Profit Margin',
-      value: `${(summary?.profitMargin || 0).toFixed(1)}%`,
-      subValue: `Target: 50.0%`,
+      title: 'Profit Margin %',
+      value: `${marginVal}%`,
+      subValue: `You kept $${profitPer100} out of every $100 sold`,
+      subValueColor:
+        marginVal >= 50
+          ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+          : marginVal >= 30
+            ? 'text-amber-600 dark:text-amber-400 font-medium'
+            : 'text-rose-600 dark:text-rose-400 font-medium',
+      badgeLabel: marginStatus.label,
       change: summary?.changes?.marginChangePct,
       isMargin: true,
       icon: Percent,
-      color: 'amber',
-      bgColor: 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'
+      color: marginStatus.color,
+      bgColor:
+        marginVal >= 50
+          ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
+          : marginVal >= 30
+            ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'
+            : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'
     }
   ];
 
@@ -146,7 +168,7 @@ export default function KpiCards({ summary, loading }) {
                     <ChangeBadge change={c.change} isMargin={c.isMargin} />
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between tabular-nums">
-                    <span>{c.subValue}</span>
+                    <span className={c.subValueColor || ''}>{c.subValue}</span>
                     <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       vs prev period
                     </span>

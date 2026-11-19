@@ -70,3 +70,54 @@ export async function createSale(payload) {
   });
   return handleResponse(res);
 }
+
+export async function uploadSales(sales, replaceExisting = true) {
+  const res = await fetch(`${API_BASE}/upload`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sales, replaceExisting })
+  });
+  return handleResponse(res);
+}
+
+export async function resetSampleData() {
+  const res = await fetch(`${API_BASE}/reset`, {
+    method: 'POST'
+  });
+  return handleResponse(res);
+}
+
+export async function fetchPeakTimes(params = {}) {
+  const query = new URLSearchParams();
+  if (params.startDate) query.append('startDate', params.startDate);
+  if (params.endDate) query.append('endDate', params.endDate);
+  if (params.category && params.category !== 'All') query.append('category', params.category);
+
+  const res = await fetch(`${API_BASE}/analytics/peak-times?${query.toString()}`);
+  return handleResponse(res);
+}
+
+export async function fetchProductMatrix(params = {}) {
+  const query = new URLSearchParams();
+  if (params.startDate) query.append('startDate', params.startDate);
+  if (params.endDate) query.append('endDate', params.endDate);
+  if (params.category && params.category !== 'All') query.append('category', params.category);
+
+  const res = await fetch(`${API_BASE}/products/matrix?${query.toString()}`);
+  return handleResponse(res);
+}
+
+export async function fetchSlowMoving() {
+  const res = await fetch(`${API_BASE}/analytics/slow-moving`);
+  return handleResponse(res);
+}
+
+export async function fetchTakeaways(params = {}) {
+  const query = new URLSearchParams();
+  if (params.startDate) query.append('startDate', params.startDate);
+  if (params.endDate) query.append('endDate', params.endDate);
+  if (params.category && params.category !== 'All') query.append('category', params.category);
+
+  const res = await fetch(`${API_BASE}/analytics/takeaways?${query.toString()}`);
+  return handleResponse(res);
+}
