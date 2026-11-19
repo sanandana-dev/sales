@@ -9,37 +9,117 @@ const STARTER_QUESTIONS = [
   'Are there any slow-moving products tying up cash on shelves?'
 ];
 
-function formatMessageContent(text) {
-  // Simple markdown-style bold and bullet formatter for clean rendering
+function formatMessageContent(text, isUser) {
+  if (!text) return null;
+
   const lines = text.split('\n');
-  return lines.map((line, idx) => {
-    // Bold replacement: **text**
-    const parts = line.split(/(\*\*.*?\*\*)/g);
-    const formattedLine = parts.map((part, pIdx) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
+  const elements = [];
+  let listItems = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      elements.push(
+        <ul
+          key={`ul-${elements.length}`}
+          className="my-1.5 space-y-1 pl-4 list-disc marker:text-[#FF901E]"
+        >
+          {listItems}
+        </ul>
+      );
+      listItems = [];
+    }
+  };
+
+  const renderFormattedSpans = rawStr => {
+    // Regex for bold (**text**), inline code (`code`)
+    const tokens = rawStr.split(/(\*\*.*?\*\*|`.*?`)/g);
+    return tokens.map((token, tIdx) => {
+      if (token.startsWith('**') && token.endsWith('**')) {
         return (
-          <strong key={pIdx} className="font-semibold text-white dark:text-white">
-            {part.slice(2, -2)}
+          <strong
+            key={tIdx}
+            className={`font-semibold ${isUser ? 'text-white' : 'text-[#172033] dark:text-white'}`}
+          >
+            {token.slice(2, -2)}
           </strong>
         );
       }
-      return part;
+      if (token.startsWith('`') && token.endsWith('`')) {
+        return (
+          <code
+            key={tIdx}
+            className={`px-1 py-0.5 rounded text-[11px] font-mono ${
+              isUser
+                ? 'bg-white/20 text-white'
+                : 'bg-slate-100 dark:bg-[#1E2538] text-[#FF901E] border border-slate-200 dark:border-[#27314C]'
+            }`}
+          >
+            {token.slice(1, -1)}
+          </code>
+        );
+      }
+      return token;
     });
+  };
 
-    if (line.trim().startsWith('- ') || line.trim().startsWith('• ')) {
-      return (
-        <li key={idx} className="ml-4 list-disc text-xs leading-relaxed">
-          {formattedLine}
-        </li>
-      );
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushList();
+      return;
     }
 
-    return (
-      <p key={idx} className={`${idx > 0 ? 'mt-1.5' : ''} text-xs leading-relaxed`}>
-        {formattedLine}
+    // Bullet points: *, -, •, or numbered like 1., 2.
+    const bulletMatch = trimmed.match(/^([*\-•]|\d+\.)\s+(.+)$/);
+    if (bulletMatch) {
+      listItems.push(
+        <li key={`li-${idx}`} className="text-xs leading-relaxed">
+          {renderFormattedSpans(bulletMatch[2])}
+        </li>
+      );
+      return;
+    }
+
+    flushList();
+
+    // Headers
+    if (trimmed.startsWith('### ')) {
+      elements.push(
+        <h4
+          key={`h4-${idx}`}
+          className={`font-bold text-xs mt-2 mb-1 ${isUser ? 'text-white' : 'text-[#172033] dark:text-white'}`}
+        >
+          {renderFormattedSpans(trimmed.slice(4))}
+        </h4>
+      );
+      return;
+    }
+
+    if (trimmed.startsWith('## ')) {
+      elements.push(
+        <h3
+          key={`h3-${idx}`}
+          className={`font-bold text-sm mt-2 mb-1 ${isUser ? 'text-white' : 'text-[#172033] dark:text-white'}`}
+        >
+          {renderFormattedSpans(trimmed.slice(3))}
+        </h3>
+      );
+      return;
+    }
+
+    elements.push(
+      <p
+        key={`p-${idx}`}
+        className={`${elements.length > 0 ? 'mt-1.5' : ''} text-xs leading-relaxed`}
+      >
+        {renderFormattedSpans(line)}
       </p>
     );
   });
+
+  flushList();
+  return elements;
 }
 
 export default function SalesChatbot() {
@@ -234,7 +314,9 @@ export default function SalesChatbot() {
                         : 'bg-white dark:bg-[#151927] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-[#27314C] rounded-tl-xs'
                     }`}
                   >
-                    <div className="text-xs break-words">{formatMessageContent(m.content)}</div>
+                    <div className="text-xs break-words">
+                      {formatMessageContent(m.content, isUser)}
+                    </div>
                     <span
                       className={`block text-[9px] mt-1 text-right ${
                         isUser ? 'text-white/75' : 'text-slate-400 dark:text-slate-500'
