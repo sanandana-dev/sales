@@ -13,3 +13,5 @@ This document records architectural, technical, and operational decisions made t
 - [phase 3] Added ErrorBoundary component to client and sanitized logging to server — Prevents blank screens on render crashes and prevents secrets from being logged.
 - [phase 4] Added automated axe-core WCAG 2.1 AA accessibility audit to test suite for 390x844 and 1280x800 viewports — Ensures zero serious or critical a11y violations across mobile and desktop.
 - [phase 4] Added tabular-nums, accessible dialog markup, labeled controls, 44px tap targets, and prefers-reduced-motion media query — Satisfies WCAG AA contrast, keyboard accessibility, and screen reader compatibility.
+- [phase 5] Lazy-loaded chart components (TrendChart, ProductBarChart, CategoryPieChart) and modal with React.lazy and Suspense — Reduced initial entry JS payload by 94.7% (from 694 KB down to 36.5 KB).
+- [phase 5] Added HTTP cache headers (immutable for static hashed assets, no-cache for HTML, no-store for dynamic analytics) and bundle budget enforcement script — Enforces sub-100 KB entry JS and prevents stale analytics caches.

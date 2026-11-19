@@ -1,12 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import FilterBar from './components/FilterBar';
 import KpiCards from './components/KpiCards';
-import TrendChart from './components/TrendChart';
-import ProductBarChart from './components/ProductBarChart';
-import CategoryPieChart from './components/CategoryPieChart';
 import ProductTable from './components/ProductTable';
-import AddSaleModal from './components/AddSaleModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import analytics from '../../shared/analytics';
 import {
@@ -17,6 +13,25 @@ import {
   fetchProducts
 } from './api';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+
+// Code-split heavy visualization & modal components
+const TrendChart = React.lazy(() => import('./components/TrendChart'));
+const ProductBarChart = React.lazy(() => import('./components/ProductBarChart'));
+const CategoryPieChart = React.lazy(() => import('./components/CategoryPieChart'));
+const AddSaleModal = React.lazy(() => import('./components/AddSaleModal'));
+
+function ChartLoadingSkeleton({ height = 'h-72' }) {
+  return (
+    <div
+      className={`bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-colors animate-pulse ${height} flex items-center justify-center`}
+    >
+      <div className="flex flex-col items-center space-y-2">
+        <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+        <span className="text-xs text-slate-400">Loading visualization...</span>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   // Filter States
@@ -189,22 +204,28 @@ export default function App() {
         {/* Charts Section: Line Trend Chart Full Width */}
         <div className="mb-6">
           <ErrorBoundary title="Trend Visualizations Unavailable" onReset={() => loadData(false)}>
-            <TrendChart
-              data={trendData}
-              range={trendRange}
-              setRange={setTrendRange}
-              loading={loading}
-            />
+            <Suspense fallback={<ChartLoadingSkeleton height="h-72" />}>
+              <TrendChart
+                data={trendData}
+                range={trendRange}
+                setRange={setTrendRange}
+                loading={loading}
+              />
+            </Suspense>
           </ErrorBoundary>
         </div>
 
         {/* Charts Section: Top 5 Bar & Category Donut in 2 cols */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ErrorBoundary title="Product Rankings Unavailable" onReset={() => loadData(false)}>
-            <ProductBarChart products={productsPerformance} loading={loading} />
+            <Suspense fallback={<ChartLoadingSkeleton height="h-64" />}>
+              <ProductBarChart products={productsPerformance} loading={loading} />
+            </Suspense>
           </ErrorBoundary>
           <ErrorBoundary title="Category Breakdown Unavailable" onReset={() => loadData(false)}>
-            <CategoryPieChart categories={categories} loading={loading} />
+            <Suspense fallback={<ChartLoadingSkeleton height="h-64" />}>
+              <CategoryPieChart categories={categories} loading={loading} />
+            </Suspense>
           </ErrorBoundary>
         </div>
 
@@ -233,12 +254,16 @@ export default function App() {
       </footer>
 
       {/* Add Sale Modal */}
-      <AddSaleModal
-        isOpen={isAddSaleOpen}
-        onClose={() => setIsAddSaleOpen(false)}
-        products={productsCatalog}
-        onSaleCreated={handleSaleCreated}
-      />
+      {isAddSaleOpen && (
+        <Suspense fallback={null}>
+          <AddSaleModal
+            isOpen={isAddSaleOpen}
+            onClose={() => setIsAddSaleOpen(false)}
+            products={productsCatalog}
+            onSaleCreated={handleSaleCreated}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

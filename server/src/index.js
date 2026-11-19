@@ -1,4 +1,6 @@
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -99,8 +101,48 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Cache-Control headers for dynamic API endpoints (prevent stale analytics)
+app.use('/api', (_req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // API Routes
 app.use('/api', routes);
+
+// Serve static frontend assets if built
+const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist');
+if (fs.existsSync(clientDistPath)) {
+  // Static assets with hash in filename -> cache for 1 year immutable
+  app.use(
+    '/assets',
+    express.static(path.join(clientDistPath, 'assets'), {
+      maxAge: '1y',
+      immutable: true
+    })
+  );
+
+  // General static directory with HTML revalidation
+  app.use(
+    express.static(clientDistPath, {
+      maxAge: 0,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+        }
+      }
+    })
+  );
+
+  // Fallback to index.html for SPA routes
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' || req.path.startsWith('/api')) return next();
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {
