@@ -12,7 +12,7 @@ A modern, full-stack Small Business Sales & Margin Intelligence Dashboard built 
   - **Top 5 Products by Revenue**: Ranked horizontal bar chart highlighting primary revenue drivers.
   - **Revenue Share by Category**: Donut chart with breakdown of department contributions and margins.
 - **Product Performance Table**: Search by product name, sortable by any column (Revenue, Profit, Units, Margin, Price), with `Best Seller`, `Moderate`, and `Slow Mover` badges.
-- **Granular Filtering**: Quick date range presets (*All Time*, *Last 30 Days*, *Last 90 Days*, *Last 12 Months*, *Custom*) and Category filter dropdown.
+- **Granular Filtering**: Quick date range presets (_All Time_, _Last 30 Days_, _Last 90 Days_, _Last 12 Months_, _Custom_) and Category filter dropdown.
 - **Transaction Entry (Add Sale)**: Interactive modal with live calculations of revenue, COGS, gross profit, and margin before submission.
 - **Modern UX**: Light/Dark mode with local storage persistence, responsive layout, loading states, and error handling.
 - **Zero-Setup Database**: Embedded SQLite (`database.sqlite`) seeded automatically with ~12 months of realistic small-business sales records.
@@ -69,18 +69,24 @@ sales/
 ## ⚡ Quick Start
 
 ### 1. Prerequisites
+
 - Node.js (v18 or higher recommended)
 - npm
 
 ### 2. Installation
+
 Install all dependencies (root, backend, and frontend):
+
 ```bash
 npm run install:all
 ```
-*(Or navigate to `/server` and `/client` and run `npm install` in each).*
+
+_(Or navigate to `/server` and `/client` and run `npm install` in each)._
 
 ### 3. Run Development Environment
+
 Start both the backend server (port 5000) and frontend client (port 5173) with a single command:
+
 ```bash
 npm run dev
 ```
@@ -89,13 +95,17 @@ npm run dev
 - **Backend API Server**: [http://localhost:5000/api](http://localhost:5000/api)
 
 ### 4. (Optional) Re-Seed Database
+
 To re-seed the SQLite database with a fresh 12-month transaction dataset:
+
 ```bash
 npm run seed
 ```
 
 ### 5. Automated Backend Tests
+
 Run the test suite to verify all endpoints and validations:
+
 ```bash
 npm test
 ```
@@ -106,20 +116,21 @@ npm test
 
 ### Base URL: `http://localhost:5000/api`
 
-| Endpoint | Method | Query Parameters | Description |
-|---|---|---|---|
-| `/summary` | `GET` | `startDate`, `endDate`, `category` | Returns total transactions, units sold, total revenue, gross profit, profit margin, plus previous period delta percentages. |
-| `/sales-trend` | `GET` | `range` (`monthly` \| `weekly`), `startDate`, `endDate`, `category` | Returns aggregated time series data for revenue, profit, units, and margin. |
-| `/products/performance` | `GET` | `search`, `category`, `sortBy`, `order`, `startDate`, `endDate` | Returns product performance metrics with sorting, search, and dynamic status badges (`Best Seller`, `Moderate`, `Slow Mover`). |
-| `/categories` | `GET` | `startDate`, `endDate` | Returns revenue, profit, unit volume, and revenue share percentage per department. |
-| `/products` | `GET` | None | Returns list of products with current standard selling and cost prices for the selector. |
-| `/sales` | `POST` | JSON body | Records a new sale transaction. |
+| Endpoint                | Method | Query Parameters                                                    | Description                                                                                                                    |
+| ----------------------- | ------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/summary`              | `GET`  | `startDate`, `endDate`, `category`                                  | Returns total transactions, units sold, total revenue, gross profit, profit margin, plus previous period delta percentages.    |
+| `/sales-trend`          | `GET`  | `range` (`monthly` \| `weekly`), `startDate`, `endDate`, `category` | Returns aggregated time series data for revenue, profit, units, and margin.                                                    |
+| `/products/performance` | `GET`  | `search`, `category`, `sortBy`, `order`, `startDate`, `endDate`     | Returns product performance metrics with sorting, search, and dynamic status badges (`Best Seller`, `Moderate`, `Slow Mover`). |
+| `/categories`           | `GET`  | `startDate`, `endDate`                                              | Returns revenue, profit, unit volume, and revenue share percentage per department.                                             |
+| `/products`             | `GET`  | None                                                                | Returns list of products with current standard selling and cost prices for the selector.                                       |
+| `/sales`                | `POST` | JSON body                                                           | Records a new sale transaction.                                                                                                |
 
 ---
 
 ### Request & Response Examples
 
 #### 1. GET `/api/summary`
+
 ```json
 {
   "totalSales": 2380,
@@ -143,7 +154,9 @@ npm test
 ```
 
 #### 2. POST `/api/sales`
+
 **Request Body**:
+
 ```json
 {
   "productId": 1,
@@ -154,6 +167,7 @@ npm test
 ```
 
 **Response (201 Created)**:
+
 ```json
 {
   "success": true,

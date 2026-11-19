@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Sun, Moon, Plus, BarChart3, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, Plus, BarChart3 } from 'lucide-react';
 
 export default function Navbar({ onOpenAddSale, totalProducts = 0 }) {
   const { theme, toggleTheme } = useTheme();
@@ -15,13 +15,17 @@ export default function Navbar({ onOpenAddSale, totalProducts = 0 }) {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">SalesPulse</span>
+              <span className="font-bold text-lg text-slate-900 dark:text-white tracking-tight">
+                SalesPulse
+              </span>
               <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                Live DB
+                Live DB ({totalProducts} Products)
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">Small Business Sales & Margin Intelligence</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
+              Small Business Sales & Margin Intelligence
+            </p>
           </div>
         </div>
 
@@ -34,7 +38,11 @@ export default function Navbar({ onOpenAddSale, totalProducts = 0 }) {
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             aria-label="Toggle theme"
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-700" />}
+            {theme === 'dark' ? (
+              <Sun className="w-5 h-5 text-amber-400" />
+            ) : (
+              <Moon className="w-5 h-5 text-slate-700" />
+            )}
           </button>
 
           {/* Add Sale Button */}

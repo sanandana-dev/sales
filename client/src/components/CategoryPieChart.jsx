@@ -1,19 +1,12 @@
 import React from 'react';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip
-} from 'recharts';
-import { useTheme } from '../context/ThemeContext';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { PieChart as PieIcon } from 'lucide-react';
 
 const CATEGORY_COLORS = {
-  'Electronics': '#3b82f6',     // Blue
-  'Office': '#10b981',          // Emerald
-  'Apparel': '#8b5cf6',         // Purple
-  'Home & Kitchen': '#f59e0b',  // Amber
+  Electronics: '#3b82f6', // Blue
+  Office: '#10b981', // Emerald
+  Apparel: '#8b5cf6', // Purple
+  'Home & Kitchen': '#f59e0b' // Amber
 };
 
 const FALLBACK_COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
@@ -21,8 +14,12 @@ const FALLBACK_COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
-  const formatCur = (val) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCur = val =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(val);
 
   return (
     <div className="bg-slate-900/95 dark:bg-slate-950/95 text-white p-3 rounded-xl shadow-xl border border-slate-700/50 backdrop-blur-md text-xs min-w-[160px]">
@@ -50,15 +47,17 @@ function CustomTooltip({ active, payload }) {
 }
 
 export default function CategoryPieChart({ categories = [], loading }) {
-  const { theme } = useTheme();
-
   const getColor = (category, index) => {
     return CATEGORY_COLORS[category] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
   };
 
   const totalRev = categories.reduce((sum, c) => sum + (c.revenue || 0), 0);
-  const formatCur = (val) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCur = val =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(val);
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-colors flex flex-col justify-between">
@@ -114,7 +113,9 @@ export default function CategoryPieChart({ categories = [], loading }) {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-[10px] uppercase font-semibold text-slate-400">Total</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">{formatCur(totalRev)}</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                {formatCur(totalRev)}
+              </span>
             </div>
           </div>
 
@@ -123,7 +124,10 @@ export default function CategoryPieChart({ categories = [], loading }) {
             {categories.map((cat, idx) => {
               const color = getColor(cat.category, idx);
               return (
-                <div key={cat.category} className="flex items-center justify-between text-xs p-1 rounded-lg">
+                <div
+                  key={cat.category}
+                  className="flex items-center justify-between text-xs p-1 rounded-lg"
+                >
                   <div className="flex items-center space-x-1.5 min-w-0">
                     <span
                       className="w-2.5 h-2.5 rounded-full shrink-0"

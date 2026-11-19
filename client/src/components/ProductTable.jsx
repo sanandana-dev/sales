@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Search,
   ArrowUpDown,
@@ -19,12 +19,18 @@ export default function ProductTable({
   order,
   onSort
 }) {
-  const formatCur = (val) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(val || 0);
+  const formatCur = val =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(val || 0);
 
-  const getSortIcon = (field) => {
+  const getSortIcon = field => {
     if (sortBy !== field) {
-      return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />;
+      return (
+        <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      );
     }
     return order === 'asc' ? (
       <ArrowUp className="w-3.5 h-3.5 text-blue-500" />
@@ -33,7 +39,7 @@ export default function ProductTable({
     );
   };
 
-  const renderBadge = (badge) => {
+  const renderBadge = badge => {
     switch (badge) {
       case 'Best Seller':
         return (
@@ -79,7 +85,7 @@ export default function ProductTable({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder="Search products by name..."
             className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
           />
@@ -175,7 +181,7 @@ export default function ProductTable({
                 </td>
               </tr>
             ) : (
-              products.map((p) => (
+              products.map(p => (
                 <tr
                   key={p.id}
                   className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
@@ -206,9 +212,7 @@ export default function ProductTable({
                   <td className="py-3 px-4 text-right font-semibold text-amber-600 dark:text-amber-400">
                     {p.profitMargin}%
                   </td>
-                  <td className="py-3 px-4 text-center">
-                    {renderBadge(p.badge)}
-                  </td>
+                  <td className="py-3 px-4 text-center">{renderBadge(p.badge)}</td>
                 </tr>
               ))
             )}
@@ -219,7 +223,9 @@ export default function ProductTable({
       {/* Footer count */}
       <div className="p-3.5 px-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
         <span>Showing {products.length} products</span>
-        <span className="text-[11px] text-slate-400">Sorted by {sortBy} ({order.toUpperCase()})</span>
+        <span className="text-[11px] text-slate-400">
+          Sorted by {sortBy} ({order.toUpperCase()})
+        </span>
       </div>
     </div>
   );

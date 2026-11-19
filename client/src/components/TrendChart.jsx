@@ -10,14 +10,18 @@ import {
   Legend
 } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
-import { Calendar, DollarSign, TrendingUp } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;
-  const formatCur = (val) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCur = val =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(val);
 
   return (
     <div className="bg-slate-900/95 dark:bg-slate-950/95 text-white p-3.5 rounded-xl shadow-xl border border-slate-700/50 backdrop-blur-md text-xs min-w-[180px]">
@@ -57,7 +61,7 @@ export default function TrendChart({ data = [], range, setRange, loading }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  const formatYAxis = (val) => {
+  const formatYAxis = val => {
     if (val >= 1000) return `$${(val / 1000).toFixed(0)}k`;
     return `$${val}`;
   };

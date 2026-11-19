@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const routes = require('./routes');
 const { seedDatabase } = require('./seed');
 
@@ -8,11 +7,13 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Enable CORS for frontend development
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
 
 app.use(express.json());
 
@@ -45,13 +46,16 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   console.error('Unhandled server error:', err);
   res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Sales Analytics API server running at http://localhost:${PORT}`);
-});
+let server = null;
+if (require.main === module) {
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Sales Analytics API server running at http://localhost:${PORT}`);
+  });
+}
 
 module.exports = { app, server };

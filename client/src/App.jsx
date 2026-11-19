@@ -49,7 +49,7 @@ export default function App() {
   // Calculate dates when preset changes
   useEffect(() => {
     const today = new Date('2026-11-19T23:59:59'); // Anchor date for dataset
-    const formatDate = (d) => d.toISOString().slice(0, 10);
+    const formatDate = d => d.toISOString().slice(0, 10);
 
     if (rangePreset === '30d') {
       const start = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
@@ -70,59 +70,56 @@ export default function App() {
   }, [rangePreset]);
 
   // Load all dashboard data
-  const loadData = useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
-    setIsRefreshing(true);
-    setError(null);
+  const loadData = useCallback(
+    async (isSilent = false) => {
+      if (!isSilent) setLoading(true);
+      setIsRefreshing(true);
+      setError(null);
 
-    const filterParams = {
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
-      category: category !== 'All' ? category : undefined
-    };
+      const filterParams = {
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        category: category !== 'All' ? category : undefined
+      };
 
-    try {
-      const [
-        summaryRes,
-        trendRes,
-        perfRes,
-        catRes,
-        catalogRes
-      ] = await Promise.all([
-        fetchSummary(filterParams),
-        fetchSalesTrend({ ...filterParams, range: trendRange }),
-        fetchProductsPerformance({
-          ...filterParams,
-          search,
-          sortBy,
-          order
-        }),
-        fetchCategories({ startDate: filterParams.startDate, endDate: filterParams.endDate }),
-        fetchProducts()
-      ]);
+      try {
+        const [summaryRes, trendRes, perfRes, catRes, catalogRes] = await Promise.all([
+          fetchSummary(filterParams),
+          fetchSalesTrend({ ...filterParams, range: trendRange }),
+          fetchProductsPerformance({
+            ...filterParams,
+            search,
+            sortBy,
+            order
+          }),
+          fetchCategories({ startDate: filterParams.startDate, endDate: filterParams.endDate }),
+          fetchProducts()
+        ]);
 
-      setSummary(summaryRes);
-      setTrendData(trendRes);
-      setProductsPerformance(perfRes);
-      setCategories(catRes);
-      setProductsCatalog(catalogRes);
-    } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      setError(err.message || 'Error communicating with Sales API');
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [startDate, endDate, category, trendRange, search, sortBy, order]);
+        setSummary(summaryRes);
+        setTrendData(trendRes);
+        setProductsPerformance(perfRes);
+        setCategories(catRes);
+        setProductsCatalog(catalogRes);
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+        setError(err.message || 'Error communicating with Sales API');
+      } finally {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
+    },
+    [startDate, endDate, category, trendRange, search, sortBy, order]
+  );
 
   // Trigger load on filter changes
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const handleSort = (field) => {
+  const handleSort = field => {
     if (sortBy === field) {
-      setOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+      setOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortBy(field);
       setOrder('desc');
@@ -146,10 +143,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
       {/* Top Navigation */}
-      <Navbar
-        onOpenAddSale={() => setIsAddSaleOpen(true)}
-        totalProducts={productsCatalog.length}
-      />
+      <Navbar onOpenAddSale={() => setIsAddSaleOpen(true)} totalProducts={productsCatalog.length} />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -222,7 +216,9 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-400 dark:text-slate-500 transition-colors">
-        <p>Small Business Sales Analytics Dashboard • React + Vite + Tailwind CSS + Recharts + SQLite</p>
+        <p>
+          Small Business Sales Analytics Dashboard • React + Vite + Tailwind CSS + Recharts + SQLite
+        </p>
       </footer>
 
       {/* Add Sale Modal */}

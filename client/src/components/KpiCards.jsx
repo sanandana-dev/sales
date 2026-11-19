@@ -1,5 +1,13 @@
 import React from 'react';
-import { ShoppingBag, DollarSign, TrendingUp, Percent, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import {
+  ShoppingBag,
+  DollarSign,
+  TrendingUp,
+  Percent,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus
+} from 'lucide-react';
 
 function ChangeBadge({ change, isMargin = false }) {
   if (change === null || change === undefined || isNaN(change)) {
@@ -34,13 +42,15 @@ function ChangeBadge({ change, isMargin = false }) {
       ) : (
         <ArrowDownRight className="w-3 h-3 mr-0.5 stroke-[2.5]" />
       )}
-      {isPositive ? '+' : ''}{change}{isMargin ? '% pts' : '%'}
+      {isPositive ? '+' : ''}
+      {change}
+      {isMargin ? '% pts' : '%'}
     </span>
   );
 }
 
 export default function KpiCards({ summary, loading }) {
-  const formatCurrency = (val) => {
+  const formatCurrency = val => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -121,7 +131,9 @@ export default function KpiCards({ summary, loading }) {
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center justify-between">
                   <span>{c.subValue}</span>
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500">vs prev period</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                    vs prev period
+                  </span>
                 </div>
               </div>
             )}

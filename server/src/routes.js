@@ -48,10 +48,15 @@ router.get('/summary', (req, res) => {
 
     const currentStats = db.prepare(currentQuery).get(...params);
     const totalRevenue = Number(currentStats.totalRevenue.toFixed(2));
-    const totalProfit = Number(currentStats.profit ? currentStats.totalProfit.toFixed(2) : currentStats.totalProfit.toFixed(2));
+    const totalProfit = Number(
+      currentStats.profit
+        ? currentStats.totalProfit.toFixed(2)
+        : currentStats.totalProfit.toFixed(2)
+    );
     const totalSales = currentStats.totalSales;
     const totalUnits = currentStats.totalUnits;
-    const profitMargin = totalRevenue > 0 ? Number(((totalProfit / totalRevenue) * 100).toFixed(2)) : 0;
+    const profitMargin =
+      totalRevenue > 0 ? Number(((totalProfit / totalRevenue) * 100).toFixed(2)) : 0;
 
     // Previous period calculation for % change
     let prevStats = { totalSales: 0, totalRevenue: 0, totalProfit: 0 };
@@ -87,10 +92,12 @@ router.get('/summary', (req, res) => {
       // If no date range specified, compare current 30 days vs previous 30 days
       const maxDateRow = db.prepare('SELECT MAX(sale_date) as maxDate FROM sales').get();
       const maxDate = maxDateRow && maxDateRow.maxDate ? new Date(maxDateRow.maxDate) : new Date();
-      const curr30Start = new Date(maxDate.getTime() - 29 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const curr30End = maxDate.toISOString().slice(0, 10);
-      const prev30Start = new Date(maxDate.getTime() - 59 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      const prev30End = new Date(maxDate.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      const prev30Start = new Date(maxDate.getTime() - 59 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      const prev30End = new Date(maxDate.getTime() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
 
       let pWhere = ['s.sale_date >= ?', 's.sale_date <= ?'];
       let pParams = [prev30Start, prev30End];
@@ -132,7 +139,7 @@ router.get('/summary', (req, res) => {
         totalSales: prevSales,
         totalRevenue: prevRev,
         totalProfit: prevProf,
-        profitMargin: prevMargin,
+        profitMargin: prevMargin
       },
       changes: {
         salesChangePct: calcPct(totalSales, prevSales),
@@ -171,13 +178,12 @@ router.get('/sales-trend', (req, res) => {
     const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
     let groupExpression;
-    let labelFormat;
 
     if (range === 'weekly') {
       // Group by Year and Week
       groupExpression = "strftime('%Y-W%W', s.sale_date)";
     } else if (range === 'daily') {
-      groupExpression = "s.sale_date";
+      groupExpression = 's.sale_date';
     } else {
       // Monthly default
       groupExpression = "strftime('%Y-%m', s.sale_date)";
@@ -241,7 +247,14 @@ router.get('/sales-trend', (req, res) => {
 // 3. GET /api/products/performance
 router.get('/products/performance', (req, res) => {
   try {
-    const { search = '', category = '', sortBy = 'revenue', order = 'desc', startDate, endDate } = req.query;
+    const {
+      search = '',
+      category = '',
+      sortBy = 'revenue',
+      order = 'desc',
+      startDate,
+      endDate
+    } = req.query;
 
     let whereClauses = [];
     let params = [];
@@ -334,8 +347,8 @@ router.get('/products/performance', (req, res) => {
 
     rows.sort((a, b) => {
       if (typeof a[sortField] === 'string') {
-        return isAsc 
-          ? a[sortField].localeCompare(b[sortField]) 
+        return isAsc
+          ? a[sortField].localeCompare(b[sortField])
           : b[sortField].localeCompare(a[sortField]);
       }
       return isAsc ? a[sortField] - b[sortField] : b[sortField] - a[sortField];
@@ -412,11 +425,15 @@ router.get('/categories', (req, res) => {
 // 5. GET /api/products (Catalogue for Add Sale dropdown)
 router.get('/products', (req, res) => {
   try {
-    const products = db.prepare(`
+    const products = db
+      .prepare(
+        `
       SELECT id, name, category, cost_price as costPrice, selling_price as sellingPrice
       FROM products
       ORDER BY name ASC
-    `).all();
+    `
+      )
+      .all();
 
     res.json(products);
   } catch (error) {
@@ -474,15 +491,7 @@ router.post('/sales', (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
-    const result = insertStmt.run(
-      product.id,
-      qty,
-      unitCost,
-      unitPrice,
-      revenue,
-      profit,
-      finalDate
-    );
+    const result = insertStmt.run(product.id, qty, unitCost, unitPrice, revenue, profit, finalDate);
 
     const newSale = {
       id: result.lastInsertRowid,

@@ -2,24 +2,84 @@ const db = require('./db');
 
 const sampleProducts = [
   // Electronics
-  { name: 'Pro Wireless Mechanical Keyboard', category: 'Electronics', cost_price: 45.0, selling_price: 119.99 },
-  { name: 'Ergonomic Vertical Mouse', category: 'Electronics', cost_price: 18.0, selling_price: 49.99 },
-  { name: 'Ultra-wide 34" Curved Monitor', category: 'Electronics', cost_price: 220.0, selling_price: 449.99 },
-  { name: 'Noise-Canceling USB-C Headset', category: 'Electronics', cost_price: 35.0, selling_price: 89.99 },
-  
+  {
+    name: 'Pro Wireless Mechanical Keyboard',
+    category: 'Electronics',
+    cost_price: 45.0,
+    selling_price: 119.99
+  },
+  {
+    name: 'Ergonomic Vertical Mouse',
+    category: 'Electronics',
+    cost_price: 18.0,
+    selling_price: 49.99
+  },
+  {
+    name: 'Ultra-wide 34" Curved Monitor',
+    category: 'Electronics',
+    cost_price: 220.0,
+    selling_price: 449.99
+  },
+  {
+    name: 'Noise-Canceling USB-C Headset',
+    category: 'Electronics',
+    cost_price: 35.0,
+    selling_price: 89.99
+  },
+
   // Office
-  { name: 'Motorized Standing Desk Converter', category: 'Office', cost_price: 90.0, selling_price: 229.99 },
-  { name: 'Full-Grain Leather Desk Pad', category: 'Office', cost_price: 12.0, selling_price: 39.99 },
-  { name: 'Memory Foam Lumbar Support Pillow', category: 'Office', cost_price: 14.0, selling_price: 34.99 },
-  
+  {
+    name: 'Motorized Standing Desk Converter',
+    category: 'Office',
+    cost_price: 90.0,
+    selling_price: 229.99
+  },
+  {
+    name: 'Full-Grain Leather Desk Pad',
+    category: 'Office',
+    cost_price: 12.0,
+    selling_price: 39.99
+  },
+  {
+    name: 'Memory Foam Lumbar Support Pillow',
+    category: 'Office',
+    cost_price: 14.0,
+    selling_price: 34.99
+  },
+
   // Apparel
-  { name: 'Organic Cotton Heavyweight Hoodie', category: 'Apparel', cost_price: 22.0, selling_price: 68.0 },
-  { name: 'Performance Merino Wool Socks (3-Pack)', category: 'Apparel', cost_price: 9.0, selling_price: 28.0 },
-  { name: 'Weatherproof Commuter Windbreaker', category: 'Apparel', cost_price: 38.0, selling_price: 98.0 },
-  
+  {
+    name: 'Organic Cotton Heavyweight Hoodie',
+    category: 'Apparel',
+    cost_price: 22.0,
+    selling_price: 68.0
+  },
+  {
+    name: 'Performance Merino Wool Socks (3-Pack)',
+    category: 'Apparel',
+    cost_price: 9.0,
+    selling_price: 28.0
+  },
+  {
+    name: 'Weatherproof Commuter Windbreaker',
+    category: 'Apparel',
+    cost_price: 38.0,
+    selling_price: 98.0
+  },
+
   // Home & Kitchen
-  { name: 'Double-Wall Insulated Tumbler 24oz', category: 'Home & Kitchen', cost_price: 8.5, selling_price: 29.99 },
-  { name: 'Precision Gooseneck Electric Kettle', category: 'Home & Kitchen', cost_price: 28.0, selling_price: 74.99 }
+  {
+    name: 'Double-Wall Insulated Tumbler 24oz',
+    category: 'Home & Kitchen',
+    cost_price: 8.5,
+    selling_price: 29.99
+  },
+  {
+    name: 'Precision Gooseneck Electric Kettle',
+    category: 'Home & Kitchen',
+    cost_price: 28.0,
+    selling_price: 74.99
+  }
 ];
 
 function seedDatabase(force = false) {
@@ -35,12 +95,18 @@ function seedDatabase(force = false) {
 
   const clearSales = db.prepare('DELETE FROM sales');
   const clearProducts = db.prepare('DELETE FROM products');
-  const resetSqliteSeq = db.prepare("DELETE FROM sqlite_sequence WHERE name IN ('products', 'sales')");
+  const resetSqliteSeq = db.prepare(
+    "DELETE FROM sqlite_sequence WHERE name IN ('products', 'sales')"
+  );
 
   db.transaction(() => {
     clearSales.run();
     clearProducts.run();
-    try { resetSqliteSeq.run(); } catch (e) { /* ignore if sqlite_sequence not ready */ }
+    try {
+      resetSqliteSeq.run();
+    } catch (e) {
+      /* ignore if sqlite_sequence not ready */
+    }
 
     // Insert products
     const insertProduct = db.prepare(`
@@ -99,7 +165,7 @@ function seedDatabase(force = false) {
         const rand = Math.random();
         let quantity = 1;
         if (rand > 0.65) quantity = 2;
-        if (rand > 0.90) quantity = 3;
+        if (rand > 0.9) quantity = 3;
         if (rand > 0.97) quantity = 4;
 
         const revenue = Number((quantity * product.selling_price).toFixed(2));
@@ -119,7 +185,9 @@ function seedDatabase(force = false) {
       }
     }
 
-    console.log(`Seeding complete: inserted ${productIds.length} products and ${totalInserted} sales.`);
+    console.log(
+      `Seeding complete: inserted ${productIds.length} products and ${totalInserted} sales.`
+    );
   })();
 }
 

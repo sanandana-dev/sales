@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, DollarSign, Calculator, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Plus, Calculator, CheckCircle2, AlertCircle } from 'lucide-react';
 import { createSale } from '../api';
 
 export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCreated }) {
@@ -20,18 +20,18 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
   }, [products, productId]);
 
   // Update default selling price when selected product changes
-  const handleProductChange = (id) => {
+  const handleProductChange = id => {
     setProductId(id);
-    const prod = products.find((p) => p.id === Number(id));
+    const prod = products.find(p => p.id === Number(id));
     if (prod) {
       setSellingPrice(prod.sellingPrice);
     }
   };
 
-  const selectedProduct = products.find((p) => p.id === Number(productId));
+  const selectedProduct = products.find(p => p.id === Number(productId));
 
   // Calculations for live preview
-  const currentPrice = parseFloat(sellingPrice) || (selectedProduct?.sellingPrice || 0);
+  const currentPrice = parseFloat(sellingPrice) || selectedProduct?.sellingPrice || 0;
   const currentCost = selectedProduct?.costPrice || 0;
   const currentQty = parseInt(quantity, 10) || 1;
   const estRevenue = Number((currentQty * currentPrice).toFixed(2));
@@ -39,7 +39,7 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
   const estProfit = Number((estRevenue - estCost).toFixed(2));
   const estMargin = estRevenue > 0 ? Number(((estProfit / estRevenue) * 100).toFixed(1)) : 0;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
@@ -62,8 +62,10 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
         saleDate
       });
 
-      setSuccessMsg(`Sale recorded! Revenue: $${res.sale.revenue.toFixed(2)}, Profit: $${res.sale.profit.toFixed(2)}`);
-      
+      setSuccessMsg(
+        `Sale recorded! Revenue: $${res.sale.revenue.toFixed(2)}, Profit: $${res.sale.profit.toFixed(2)}`
+      );
+
       if (onSaleCreated) {
         onSaleCreated(res.sale);
       }
@@ -92,8 +94,12 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
               <Plus className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">Record New Sale</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Post transaction directly to SQLite</p>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                Record New Sale
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Post transaction directly to SQLite
+              </p>
             </div>
           </div>
           <button
@@ -127,11 +133,11 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
             </label>
             <select
               value={productId}
-              onChange={(e) => handleProductChange(e.target.value)}
+              onChange={e => handleProductChange(e.target.value)}
               className="w-full text-xs font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               required
             >
-              {products.map((p) => (
+              {products.map(p => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.category}) — Default ${p.sellingPrice.toFixed(2)}
                 </option>
@@ -148,7 +154,7 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
               <div className="flex items-center">
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
                   className="px-2.5 py-2 bg-slate-100 dark:bg-slate-800 border border-r-0 border-slate-200 dark:border-slate-700 rounded-l-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                 >
                   -
@@ -158,13 +164,13 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
                   min="1"
                   max="1000"
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-full text-center text-xs bg-slate-50 dark:bg-slate-800 border-y border-slate-200 dark:border-slate-700 py-2 text-slate-900 dark:text-white focus:outline-none"
                   required
                 />
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => q + 1)}
+                  onClick={() => setQuantity(q => q + 1)}
                   className="px-2.5 py-2 bg-slate-100 dark:bg-slate-800 border border-l-0 border-slate-200 dark:border-slate-700 rounded-r-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                 >
                   +
@@ -177,13 +183,15 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
                 Selling Price ($)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+                  $
+                </span>
                 <input
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={sellingPrice}
-                  onChange={(e) => setSellingPrice(e.target.value)}
+                  onChange={e => setSellingPrice(e.target.value)}
                   className="w-full pl-7 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                   required
                 />
@@ -199,7 +207,7 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
             <input
               type="date"
               value={saleDate}
-              onChange={(e) => setSaleDate(e.target.value)}
+              onChange={e => setSaleDate(e.target.value)}
               className="w-full p-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               required
             />
