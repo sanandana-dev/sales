@@ -1,6 +1,34 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+
+// Load environment variables from .env if present
+const envFiles = [path.join(__dirname, '..', '..', '.env'), path.join(__dirname, '..', '.env')];
+for (const envFile of envFiles) {
+  if (fs.existsSync(envFile)) {
+    try {
+      const content = fs.readFileSync(envFile, 'utf8');
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx !== -1) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          const val = trimmed
+            .slice(eqIdx + 1)
+            .trim()
+            .replace(/^["']|["']$/g, '');
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    } catch (_e) {
+      /* ignore env read error */
+    }
+  }
+}
+
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');

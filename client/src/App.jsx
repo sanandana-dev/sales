@@ -26,6 +26,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 const AddSaleModal = React.lazy(() => import('./components/AddSaleModal'));
 const FileUploadModal = React.lazy(() => import('./components/FileUploadModal'));
+const SalesChatbot = React.lazy(() => import('./components/SalesChatbot'));
 
 export default function App() {
   // Navigation & Drawer states
@@ -337,6 +338,11 @@ export default function App() {
           />
         </Suspense>
       )}
+
+      {/* AI Sales Chatbot (NVIDIA NIM) */}
+      <Suspense fallback={null}>
+        <SalesChatbot />
+      </Suspense>
     </div>
   );
 }

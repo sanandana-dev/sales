@@ -128,3 +128,12 @@ export async function fetchTakeaways(params = {}) {
   const res = await fetch(`${API_BASE}/analytics/takeaways?${query.toString()}`);
   return handleResponse(res);
 }
+
+export async function sendChatMessage(message, history = []) {
+  const res = await fetch(`${API_BASE}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, history })
+  });
+  return handleResponse(res);
+}

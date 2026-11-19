@@ -533,6 +533,12 @@ router.post('/clear', (_req, res) => {
   }
 });
 
+// 7c. POST /api/chat — AI Sales Chatbot powered by NVIDIA NIM API
+router.post('/chat', (req, res) => {
+  const { handleChatRequest } = require('./chat');
+  return handleChatRequest(req, res);
+});
+
 // 8. POST /api/upload — Process batch parsed Excel / CSV rows
 router.post('/upload', (req, res) => {
   try {

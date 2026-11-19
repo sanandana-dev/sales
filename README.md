@@ -51,12 +51,27 @@ npm run dev
 
 The application runs out of the box with zero setup. Optional environment variables can be customized:
 
-| Variable       | Default                 | Purpose                                                 |
-| :------------- | :---------------------- | :------------------------------------------------------ |
-| `PORT`         | `5000`                  | Port for the Express backend server.                    |
-| `NODE_ENV`     | `development`           | Environment mode (`development`, `production`, `test`). |
-| `CORS_ORIGIN`  | `*`                     | Allowed CORS origins (comma-separated or `*`).          |
-| `VITE_API_URL` | `http://localhost:5000` | Frontend backend API URL (used in local Vite dev mode). |
+| Variable         | Default                 | Purpose                                                 |
+| :--------------- | :---------------------- | :------------------------------------------------------ |
+| `PORT`           | `5000`                  | Port for the Express backend server.                    |
+| `NODE_ENV`       | `development`           | Environment mode (`development`, `production`, `test`). |
+| `CORS_ORIGIN`    | `*`                     | Allowed CORS origins (comma-separated or `*`).          |
+| `VITE_API_URL`   | `http://localhost:5000` | Frontend backend API URL (used in local Vite dev mode). |
+| `NVIDIA_API_KEY` | _(empty)_               | NVIDIA NIM API key for the AI sales chatbot.            |
+| `NVIDIA_MODEL`   | `nemotron-3.5-parse`    | NVIDIA NIM model identifier for natural language Q&A.   |
+
+---
+
+## 🤖 AI Sales Chatbot (NVIDIA NIM Integration)
+
+SalesPulse includes a built-in AI Sales Assistant powered by NVIDIA AI Foundation Endpoints / NIM:
+
+- **Model**: `nemotron-3.5-parse` (customizable via `NVIDIA_MODEL` environment variable).
+- **Backend-Only Integration**: All API calls are securely dispatched server-side to NVIDIA's OpenAI-compatible endpoint `https://integrate.api.nvidia.com/v1/chat/completions`. Your `NVIDIA_API_KEY` is never exposed to the client.
+- **Strict Data Grounding (Zero Hallucinations)**: The chatbot queries the embedded SQLite database to inject real-time structured business metrics (revenue in ₹ INR, profits, margins, category distributions, monthly trends, and product rankings) directly into the model context.
+- **Strict Out-of-Scope Refusal**: System prompts enforce that the assistant only answers questions derived from the sales dataset. If a query asks about external facts, competitors, or topics not in the data, it strictly refuses with:
+  > _"I can only answer questions based on the provided sales data, and that information is not available in the dataset."_
+- **Floating UI Widget**: An interactive, responsive chat widget in the bottom-right corner matching the dashboard's `#151927` navy and `#FF901E` orange design system with quick starter questions and message history.
 
 ---
 
@@ -102,3 +117,7 @@ Base URL: `/api`
 - `GET /api/categories` — Departmental revenue share and margins.
 - `GET /api/products` — Product catalog for transaction entry.
 - `POST /api/sales` — Record a new sale transaction (validated via Zod schema).
+- `POST /api/chat` — AI sales chatbot endpoint powered by NVIDIA NIM (`nemotron-3.5-parse`).
+- `POST /api/sales/upload` — Direct bulk Excel (`.xlsx`, `.xls`) and CSV dataset import.
+- `POST /api/sales/reset-sample` — Restore default 12-month sample dataset.
+- `POST /api/sales/clear-all` — Wipe database for clean-slate testing.
