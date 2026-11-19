@@ -1,0 +1,17 @@
+{
+  "name": "small-business-sales-dashboard",
+  "version": "1.0.0",
+  "description": "Full-stack Small Business Sales Analytics Dashboard with React, Express, and SQLite",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "seed": "npm --prefix server run seed",
+    "server": "npm --prefix server start",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm --prefix client run build",
+    "test": "npm --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
