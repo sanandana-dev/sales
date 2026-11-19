@@ -1,0 +1,17 @@
+node_modules
+client/node_modules
+server/node_modules
+.git
+.github
+client/dist
+coverage
+*.log
+.env
+.env.local
+.editorconfig
+.prettier*
+.eslint*
+test
+AUDIT.md
+PERF.md
+DECISIONS.md

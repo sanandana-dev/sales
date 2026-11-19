@@ -15,3 +15,5 @@ This document records architectural, technical, and operational decisions made t
 - [phase 4] Added tabular-nums, accessible dialog markup, labeled controls, 44px tap targets, and prefers-reduced-motion media query — Satisfies WCAG AA contrast, keyboard accessibility, and screen reader compatibility.
 - [phase 5] Lazy-loaded chart components (TrendChart, ProductBarChart, CategoryPieChart) and modal with React.lazy and Suspense — Reduced initial entry JS payload by 94.7% (from 694 KB down to 36.5 KB).
 - [phase 5] Added HTTP cache headers (immutable for static hashed assets, no-cache for HTML, no-store for dynamic analytics) and bundle budget enforcement script — Enforces sub-100 KB entry JS and prevents stale analytics caches.
+- [phase 6] Added pinned GitHub Actions CI workflow (.github/workflows/ci.yml) and Dependabot configuration — Runs automated typecheck, lint, coverage gate, e2e, build, and bundle budget on all pushes and PRs.
+- [phase 6] Added multi-stage Alpine Dockerfile with non-root appuser and healthcheck — Enables secure, reproducible containerized deployments with built client assets.

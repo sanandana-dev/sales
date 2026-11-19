@@ -1,0 +1,60 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, Typecheck, Test, Build & Audit
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4.1.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Secret Scan
+        run: npm run secret-scan
+
+      - name: Run Accessibility Audit
+        run: npm run a11y
+
+      - name: Run Strict TypeScript Check
+        run: npm run typecheck
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Unit Tests & Coverage Threshold Gate
+        run: npm run test:coverage
+
+      - name: Run All Tests
+        run: npm run test
+
+      - name: Build Production Client
+        run: npm run build
+
+      - name: Verify Bundle Budget
+        run: npm run budget
+
+      - name: Unified Check Gate
+        run: npm run check
