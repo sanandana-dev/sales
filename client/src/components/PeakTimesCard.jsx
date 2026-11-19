@@ -121,7 +121,8 @@ export default function PeakTimesCard({ peakData, loading }) {
                 Happy Hour Opportunity (Slowest: {peakData?.slowestDay} ~ {peakData?.slowestHour})
               </span>
               <span className="text-amber-700 dark:text-amber-300 text-[11px]">
-                {peakData?.promotionTip || 'Run flash offers or discount specials during slow lulls.'}
+                {peakData?.promotionTip ||
+                  'Run flash offers or discount specials during slow lulls.'}
               </span>
             </div>
           </div>

@@ -13,8 +13,12 @@ export default function ProfitSimulatorCard({ products = [], summary }) {
       : products.find(p => String(p.id) === String(selectedProductId));
 
   // Base values
-  const baseRevenue = selectedProduct ? selectedProduct.totalRevenue || selectedProduct.sellingPrice * 50 : summary?.totalRevenue || 100000;
-  const baseProfit = selectedProduct ? selectedProduct.totalProfit || (selectedProduct.sellingPrice - selectedProduct.costPrice) * 50 : summary?.totalProfit || 50000;
+  const baseRevenue = selectedProduct
+    ? selectedProduct.totalRevenue || selectedProduct.sellingPrice * 50
+    : summary?.totalRevenue || 100000;
+  const baseProfit = selectedProduct
+    ? selectedProduct.totalProfit || (selectedProduct.sellingPrice - selectedProduct.costPrice) * 50
+    : summary?.totalProfit || 50000;
   const baseCost = baseRevenue - baseProfit;
   const baseMargin = analytics.calculateProfitMargin(baseRevenue, baseProfit);
 
@@ -30,14 +34,15 @@ export default function ProfitSimulatorCard({ products = [], summary }) {
   // Break-even units note
   let breakEvenText = '';
   if (priceChangePct < 0 && simulatedMargin > 0) {
-    const requiredVolumeIncrease = Number((((baseProfit / simulatedProfit) - 1) * 100).toFixed(1));
+    const requiredVolumeIncrease = Number(((baseProfit / simulatedProfit - 1) * 100).toFixed(1));
     breakEvenText = `To match current profit after a ${Math.abs(priceChangePct)}% discount, you must sell ${requiredVolumeIncrease}% more units.`;
   } else if (priceChangePct > 0) {
     breakEvenText = `With a ${priceChangePct}% price increase, you make $${Math.abs(Math.round(profitDiff)).toLocaleString()} more profit even if sales volume stays flat!`;
   } else if (costChangePct > 0) {
     breakEvenText = `Supplier cost increase of ${costChangePct}% eats into margins. Consider negotiating bulk rates or a small price adjustment.`;
   } else {
-    breakEvenText = 'Move sliders to test the impact of supplier price hikes, clearance discounts, or markups.';
+    breakEvenText =
+      'Move sliders to test the impact of supplier price hikes, clearance discounts, or markups.';
   }
 
   const formatCur = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
@@ -159,7 +164,11 @@ export default function ProfitSimulatorCard({ products = [], summary }) {
                 isProfitUp ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
-              {isProfitUp ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+              {isProfitUp ? (
+                <TrendingUp className="w-4 h-4 mr-1" />
+              ) : (
+                <TrendingDown className="w-4 h-4 mr-1" />
+              )}
               {isProfitUp ? '+' : ''}
               {formatCur(profitDiff)}
             </span>

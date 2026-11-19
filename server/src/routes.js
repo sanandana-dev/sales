@@ -591,11 +591,7 @@ router.post('/upload', (req, res) => {
         ).trim();
 
         const category = String(
-          row.category ||
-            row.Category ||
-            row.department ||
-            row.Department ||
-            'General Merchandise'
+          row.category || row.Category || row.department || row.Department || 'General Merchandise'
         ).trim();
 
         const rawPrice =
@@ -626,19 +622,16 @@ router.post('/upload', (req, res) => {
         const quantity = Math.max(
           1,
           parseInt(
-            row.quantity ??
-              row.Quantity ??
-              row.qty ??
-              row.Qty ??
-              row.units ??
-              row.Units ??
-              1,
+            row.quantity ?? row.Quantity ?? row.qty ?? row.Qty ?? row.units ?? row.Units ?? 1,
             10
           ) || 1
         );
 
         const discount = Math.max(0, Number(row.discount ?? row.Discount ?? 0) || 0);
-        const stockQty = Math.max(0, Number(row.stock ?? row.Stock ?? row.stock_quantity ?? 45) || 45);
+        const stockQty = Math.max(
+          0,
+          Number(row.stock ?? row.Stock ?? row.stock_quantity ?? 45) || 45
+        );
 
         // Lookup or insert product
         const lowerName = productName.toLowerCase();
@@ -758,7 +751,8 @@ router.get('/analytics/peak-times', (req, res) => {
 
     // Day of week breakdown (0=Sunday ... 6=Saturday)
     const dayRows = db
-      .prepare(`
+      .prepare(
+        `
       SELECT 
         CAST(strftime('%w', s.sale_date) AS INTEGER) as dayOfWeek,
         COUNT(s.id) as totalOrders,
@@ -769,7 +763,8 @@ router.get('/analytics/peak-times', (req, res) => {
       ${whereSql}
       GROUP BY dayOfWeek
       ORDER BY dayOfWeek ASC
-    `)
+    `
+      )
       .all(...params);
 
     const DAY_NAMES = [
@@ -798,11 +793,16 @@ router.get('/analytics/peak-times', (req, res) => {
     // Identify busiest and slowest day
     const sortedDays = [...dayData].sort((a, b) => b.revenue - a.revenue);
     const busiestDay = sortedDays[0] || { day: 'Saturday', revenue: 0, orders: 0 };
-    const slowestDay = sortedDays[sortedDays.length - 1] || { day: 'Tuesday', revenue: 0, orders: 0 };
+    const slowestDay = sortedDays[sortedDays.length - 1] || {
+      day: 'Tuesday',
+      revenue: 0,
+      orders: 0
+    };
 
     // Hourly breakdown
     const hourRows = db
-      .prepare(`
+      .prepare(
+        `
       SELECT 
         CAST(SUBSTR(COALESCE(s.sale_time, '14:00'), 1, 2) AS INTEGER) as hourNum,
         COUNT(s.id) as totalOrders,
@@ -812,7 +812,8 @@ router.get('/analytics/peak-times', (req, res) => {
       ${whereSql}
       GROUP BY hourNum
       ORDER BY hourNum ASC
-    `)
+    `
+      )
       .all(...params);
 
     const hoursData = [];
@@ -872,7 +873,8 @@ router.get('/products/matrix', (req, res) => {
     const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
     const products = db
-      .prepare(`
+      .prepare(
+        `
       SELECT 
         p.id,
         p.name,
@@ -887,7 +889,8 @@ router.get('/products/matrix', (req, res) => {
       FROM products p
       LEFT JOIN sales s ON p.id = s.product_id ${whereSql.replace('WHERE', 'AND')}
       GROUP BY p.id
-    `)
+    `
+      )
       .all(...params);
 
     if (products.length === 0) {
@@ -984,7 +987,8 @@ router.get('/products/matrix', (req, res) => {
 router.get('/analytics/slow-moving', (req, res) => {
   try {
     const products = db
-      .prepare(`
+      .prepare(
+        `
       SELECT 
         p.id,
         p.name,
@@ -999,7 +1003,8 @@ router.get('/analytics/slow-moving', (req, res) => {
       LEFT JOIN sales s ON p.id = s.product_id AND s.sale_date >= date('now', '-30 days')
       GROUP BY p.id
       ORDER BY recentUnitsSold ASC, stockQuantity DESC
-    `)
+    `
+      )
       .all();
 
     let totalCashStuck = 0;
@@ -1057,7 +1062,8 @@ router.get('/analytics/takeaways', (req, res) => {
     const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
     const summaryRow = db
-      .prepare(`
+      .prepare(
+        `
       SELECT 
         COUNT(s.id) as totalOrders,
         COALESCE(SUM(s.revenue), 0) as totalRevenue,
@@ -1065,7 +1071,8 @@ router.get('/analytics/takeaways', (req, res) => {
       FROM sales s
       JOIN products p ON s.product_id = p.id
       ${whereSql}
-    `)
+    `
+      )
       .get(...params);
 
     const totalRev = analytics.toDollars(analytics.toCents(summaryRow.totalRevenue));
@@ -1074,7 +1081,8 @@ router.get('/analytics/takeaways', (req, res) => {
 
     // Top product
     const topProd = db
-      .prepare(`
+      .prepare(
+        `
       SELECT 
         p.name,
         COALESCE(SUM(s.revenue), 0) as revenue,
@@ -1085,7 +1093,8 @@ router.get('/analytics/takeaways', (req, res) => {
       GROUP BY p.id
       ORDER BY profit DESC
       LIMIT 1
-    `)
+    `
+      )
       .get(...params);
 
     const takeaways = [];

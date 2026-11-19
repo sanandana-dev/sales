@@ -89,7 +89,8 @@ export default function FileUploadModal({ isOpen, onClose, onDataImported }) {
             row.timestamp ||
             new Date().toISOString().slice(0, 10);
 
-          let dateStr = dateVal instanceof Date ? dateVal.toISOString().slice(0, 10) : String(dateVal);
+          let dateStr =
+            dateVal instanceof Date ? dateVal.toISOString().slice(0, 10) : String(dateVal);
 
           return {
             date: dateStr,
@@ -101,18 +102,23 @@ export default function FileUploadModal({ isOpen, onClose, onDataImported }) {
               row.item ||
               row.Name ||
               'Item',
-            category:
-              row.Category ||
-              row.category ||
-              row.Department ||
-              row.department ||
-              'General',
-            quantity: Number(row.Quantity || row.quantity || row.Qty || row.qty || row.Units || 1) || 1,
-            price: Number(row.Price || row.price || row['Selling Price'] || row['Unit Price'] || 19.99) || 19.99,
-            cost: row.Cost || row.cost || row['Cost Price'] || row['Unit Cost'] ? Number(row.Cost || row.cost || row['Cost Price'] || row['Unit Cost']) : undefined,
+            category: row.Category || row.category || row.Department || row.department || 'General',
+            quantity:
+              Number(row.Quantity || row.quantity || row.Qty || row.qty || row.Units || 1) || 1,
+            price:
+              Number(
+                row.Price || row.price || row['Selling Price'] || row['Unit Price'] || 19.99
+              ) || 19.99,
+            cost:
+              row.Cost || row.cost || row['Cost Price'] || row['Unit Cost']
+                ? Number(row.Cost || row.cost || row['Cost Price'] || row['Unit Cost'])
+                : undefined,
             discount: Number(row.Discount || row.discount || 0) || 0,
             stock: Number(row.Stock || row.stock || row['Stock Quantity'] || 50) || 50,
-            time: String(row.Time || row.time || row['Sale Time'] || row.Hour || '14:00').slice(0, 5)
+            time: String(row.Time || row.time || row['Sale Time'] || row.Hour || '14:00').slice(
+              0,
+              5
+            )
           };
         });
 
@@ -142,7 +148,9 @@ export default function FileUploadModal({ isOpen, onClose, onDataImported }) {
 
     try {
       const response = await uploadSales(parsedRows, replaceExisting);
-      setSuccessMessage(response.message || `Loaded ${parsedRows.length} transactions successfully!`);
+      setSuccessMessage(
+        response.message || `Loaded ${parsedRows.length} transactions successfully!`
+      );
       setTimeout(() => {
         onDataImported();
         onClose();
@@ -241,7 +249,9 @@ export default function FileUploadModal({ isOpen, onClose, onDataImported }) {
           />
           <UploadCloud className="w-10 h-10 mx-auto text-blue-500 mb-2 stroke-[1.5]" />
           <p className="text-sm font-semibold">
-            {file ? file.name : 'Click to select or drag and drop an Excel (.xlsx, .xls) or CSV file'}
+            {file
+              ? file.name
+              : 'Click to select or drag and drop an Excel (.xlsx, .xls) or CSV file'}
           </p>
           <p className="text-xs text-slate-400 mt-1">
             Columns supported: Date, Product, Category, Quantity, Price, Cost, Discount, Stock
@@ -293,7 +303,9 @@ export default function FileUploadModal({ isOpen, onClose, onDataImported }) {
                   {previewRows.map((r, i) => (
                     <tr key={i}>
                       <td className="py-1">{r.date}</td>
-                      <td className="py-1 font-medium text-slate-800 dark:text-slate-100">{r.product}</td>
+                      <td className="py-1 font-medium text-slate-800 dark:text-slate-100">
+                        {r.product}
+                      </td>
                       <td className="py-1">{r.category}</td>
                       <td className="py-1">{r.quantity}</td>
                       <td className="py-1">${r.price}</td>
@@ -310,7 +322,9 @@ export default function FileUploadModal({ isOpen, onClose, onDataImported }) {
                 onChange={e => setReplaceExisting(e.target.checked)}
                 className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
-              <span>Replace current dashboard data with this file (recommended for clean analytics)</span>
+              <span>
+                Replace current dashboard data with this file (recommended for clean analytics)
+              </span>
             </label>
           </div>
         )}

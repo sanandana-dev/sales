@@ -21,7 +21,8 @@ export default function ProductMatrixCard({ matrixData, loading }) {
       label: 'Stars',
       icon: Star,
       count: matrixData?.stars?.length || 0,
-      badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60',
+      badgeColor:
+        'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60',
       action: 'Keep in stock always',
       subtitle: 'High Sales Volume + High Profit Margin — Your #1 money makers',
       items: matrixData?.stars || []
@@ -31,7 +32,8 @@ export default function ProductMatrixCard({ matrixData, loading }) {
       label: 'Crowd Pullers',
       icon: Flame,
       count: matrixData?.crowdPullers?.length || 0,
-      badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800/60',
+      badgeColor:
+        'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800/60',
       action: 'Bundle with high-profit items',
       subtitle: 'High Sales Volume + Lower Margin — Drives customer traffic',
       items: matrixData?.crowdPullers || []
@@ -41,7 +43,8 @@ export default function ProductMatrixCard({ matrixData, loading }) {
       label: 'Hidden Gems',
       icon: Gem,
       count: matrixData?.hiddenGems?.length || 0,
-      badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800/60',
+      badgeColor:
+        'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800/60',
       action: 'Promote these more',
       subtitle: 'Low Volume + High Margin — Big profit potential if advertised',
       items: matrixData?.hiddenGems || []
@@ -51,7 +54,8 @@ export default function ProductMatrixCard({ matrixData, loading }) {
       label: 'Dead Weight',
       icon: Trash2,
       count: matrixData?.deadWeight?.length || 0,
-      badgeColor: 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800/60',
+      badgeColor:
+        'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200 dark:border-rose-800/60',
       action: 'Put on clearance sale',
       subtitle: 'Low Volume + Low Margin — Ties up cash and shelf space',
       items: matrixData?.deadWeight || []
@@ -76,7 +80,9 @@ export default function ProductMatrixCard({ matrixData, loading }) {
         </div>
 
         {/* Action Callout */}
-        <div className={`px-3 py-1 rounded-xl border text-xs font-semibold flex items-center gap-1.5 ${currentBucket.badgeColor}`}>
+        <div
+          className={`px-3 py-1 rounded-xl border text-xs font-semibold flex items-center gap-1.5 ${currentBucket.badgeColor}`}
+        >
           <span>Action:</span>
           <span>{currentBucket.action}</span>
         </div>
@@ -120,7 +126,8 @@ export default function ProductMatrixCard({ matrixData, loading }) {
           {currentBucket.subtitle}
         </span>
         <span className="text-slate-400 text-[11px]">
-          Median Cutoff: {matrixData?.medianUnits || 0} units • {matrixData?.medianMargin || 0}% margin
+          Median Cutoff: {matrixData?.medianUnits || 0} units • {matrixData?.medianMargin || 0}%
+          margin
         </span>
       </div>
 
@@ -145,7 +152,10 @@ export default function ProductMatrixCard({ matrixData, loading }) {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 tabular-nums">
               {currentBucket.items.map(p => (
-                <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+                <tr
+                  key={p.id}
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                >
                   <td className="py-2.5 font-semibold text-slate-900 dark:text-white max-w-[220px] truncate">
                     {p.name}
                   </td>
