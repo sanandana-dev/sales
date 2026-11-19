@@ -11,16 +11,12 @@ import {
 } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
 import { Trophy } from 'lucide-react';
+import analytics from '../../../shared/analytics';
 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
-  const formatCur = val =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(val);
+  const formatCur = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
 
   return (
     <div className="bg-slate-900/95 dark:bg-slate-950/95 text-white p-3 rounded-xl shadow-xl border border-slate-700/50 backdrop-blur-md text-xs min-w-[170px]">
@@ -65,8 +61,10 @@ export default function ProductBarChart({ products = [], loading }) {
   const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b'];
 
   const formatYAxis = val => {
-    if (val >= 1000) return `$${(val / 1000).toFixed(0)}k`;
-    return `$${val}`;
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(1)}Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(0)}k`;
+    return `₹${val}`;
   };
 
   return (

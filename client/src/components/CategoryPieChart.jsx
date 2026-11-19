@@ -1,6 +1,7 @@
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { PieChart as PieIcon } from 'lucide-react';
+import analytics from '../../../shared/analytics';
 
 const CATEGORY_COLORS = {
   Electronics: '#3b82f6', // Blue
@@ -14,12 +15,7 @@ const FALLBACK_COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', 
 function CustomTooltip({ active, payload }) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
-  const formatCur = val =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(val);
+  const formatCur = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
 
   return (
     <div className="bg-slate-900/95 dark:bg-slate-950/95 text-white p-3 rounded-xl shadow-xl border border-slate-700/50 backdrop-blur-md text-xs min-w-[160px]">
@@ -52,12 +48,7 @@ export default function CategoryPieChart({ categories = [], loading }) {
   };
 
   const totalRev = categories.reduce((sum, c) => sum + (c.revenue || 0), 0);
-  const formatCur = val =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(val);
+  const formatCur = val => analytics.formatCurrency(val, { maximumFractionDigits: 0 });
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm transition-colors flex flex-col justify-between">

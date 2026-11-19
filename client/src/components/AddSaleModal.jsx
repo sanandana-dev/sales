@@ -82,7 +82,7 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
       const res = await createSale(validation.data);
 
       setSuccessMsg(
-        `Sale recorded! Revenue: $${res.sale.revenue.toFixed(2)}, Profit: $${res.sale.profit.toFixed(2)}`
+        `Sale recorded! Revenue: ₹${res.sale.revenue.toFixed(2)}, Profit: ₹${res.sale.profit.toFixed(2)}`
       );
 
       if (onSaleCreated) {
@@ -230,14 +230,14 @@ export default function AddSaleModal({ isOpen, onClose, products = [], onSaleCre
                 htmlFor="sale-price-input"
                 className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
               >
-                Selling Price ($)
+                Selling Price (₹)
               </label>
               <div className="relative">
                 <span
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"
                   aria-hidden="true"
                 >
-                  $
+                  ₹
                 </span>
                 <input
                   id="sale-price-input"

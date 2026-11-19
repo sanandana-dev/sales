@@ -60,7 +60,7 @@ async function testBackend() {
     console.assert(res.body.totalRevenue > 0, 'Total revenue > 0');
     console.assert(res.body.profitMargin > 0, 'Profit margin > 0');
     console.log(
-      `✅ /api/summary passed: ${res.body.totalSales} sales, $${res.body.totalRevenue.toLocaleString()} revenue, $${res.body.totalProfit.toLocaleString()} profit, ${res.body.profitMargin}% margin`
+      `✅ /api/summary passed: ${res.body.totalSales} sales, ₹${res.body.totalRevenue.toLocaleString()} revenue, ₹${res.body.totalProfit.toLocaleString()} profit, ${res.body.profitMargin}% margin`
     );
 
     // 3. Sales trend monthly
@@ -116,7 +116,7 @@ async function testBackend() {
     console.assert(res.status === 201 && res.body.success === true, 'POST /api/sales valid failed');
     console.assert(res.body.sale.quantity === 3, 'POST sale quantity mismatch');
     console.log(
-      `✅ POST /api/sales (valid) passed: recorded sale ID ${res.body.sale.id} for $${res.body.sale.revenue}`
+      `✅ POST /api/sales (valid) passed: recorded sale ID ${res.body.sale.id} for ₹${res.body.sale.revenue}`
     );
 
     // 9. POST /api/sales invalid product

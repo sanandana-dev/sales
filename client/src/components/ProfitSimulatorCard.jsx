@@ -37,7 +37,7 @@ export default function ProfitSimulatorCard({ products = [], summary }) {
     const requiredVolumeIncrease = Number(((baseProfit / simulatedProfit - 1) * 100).toFixed(1));
     breakEvenText = `To match current profit after a ${Math.abs(priceChangePct)}% discount, you must sell ${requiredVolumeIncrease}% more units.`;
   } else if (priceChangePct > 0) {
-    breakEvenText = `With a ${priceChangePct}% price increase, you make $${Math.abs(Math.round(profitDiff)).toLocaleString()} more profit even if sales volume stays flat!`;
+    breakEvenText = `With a ${priceChangePct}% price increase, you make ₹${Math.abs(Math.round(profitDiff)).toLocaleString()} more profit even if sales volume stays flat!`;
   } else if (costChangePct > 0) {
     breakEvenText = `Supplier cost increase of ${costChangePct}% eats into margins. Consider negotiating bulk rates or a small price adjustment.`;
   } else {

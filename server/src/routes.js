@@ -1043,7 +1043,7 @@ router.get('/analytics/slow-moving', (req, res) => {
       slowProducts: slowItems,
       recommendation:
         totalCashStuck > 0
-          ? `You have ~$${totalCashStuck.toLocaleString()} tied up in slow-moving inventory. Consider running a 15–20% clearance promo to unlock liquidity.`
+          ? `You have ~₹${totalCashStuck.toLocaleString()} tied up in slow-moving inventory. Consider running a 15–20% clearance promo to unlock liquidity.`
           : 'Inventory velocity is healthy with no critically stagnant items.'
     });
   } catch (error) {
@@ -1136,14 +1136,14 @@ router.get('/analytics/takeaways', (req, res) => {
     takeaways.push({
       type: 'revenue',
       title: 'Healthy Revenue Generation',
-      text: `Your business generated $${totalRev.toLocaleString()} across ${summaryRow.totalOrders.toLocaleString()} customer orders with an overall profit margin of ${margin}%.`
+      text: `Your business generated ₹${totalRev.toLocaleString()} across ${summaryRow.totalOrders.toLocaleString()} customer orders with an overall profit margin of ${margin}%.`
     });
 
     // 2. Real profit clarity
     takeaways.push({
       type: 'profit',
       title: 'Real Profit Kept',
-      text: `You kept $${Math.round(margin)} in pure profit for every $100 collected at the register (Total net profit: $${totalProf.toLocaleString()}).`
+      text: `You kept ₹${Math.round(margin)} in pure profit for every ₹100 collected at the register (Total net profit: ₹${totalProf.toLocaleString()}).`
     });
 
     // 3. Top performer
@@ -1152,7 +1152,7 @@ router.get('/analytics/takeaways', (req, res) => {
       takeaways.push({
         type: 'star',
         title: 'Top Profit Engine',
-        text: `"${topProd.name}" is your highest grossing earner, generating $${topProdProfit.toLocaleString()} in net profit alone.`
+        text: `"${topProd.name}" is your highest grossing earner, generating ₹${topProdProfit.toLocaleString()} in net profit alone.`
       });
     }
 

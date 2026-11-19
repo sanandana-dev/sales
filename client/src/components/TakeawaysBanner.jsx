@@ -71,7 +71,7 @@ export default function TakeawaysBanner({ takeaways = [], margin = 0, loading = 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300">
             <span>Keep Rate:</span>
             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-              ${Math.round(margin)} per $100
+              ₹{Math.round(margin)} per ₹100
             </span>
           </div>
         </div>

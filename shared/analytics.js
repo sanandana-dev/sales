@@ -70,9 +70,9 @@ function formatCurrency(amount, options = {}) {
       ? Math.min(options.minimumFractionDigits, maxDigits)
       : Math.min(2, maxDigits);
 
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'INR',
     minimumFractionDigits: minDigits,
     maximumFractionDigits: maxDigits
   }).format(val);

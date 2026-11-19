@@ -94,11 +94,11 @@ describe('Pure Business Logic Unit Tests - Comprehensive Edge Cases', () => {
   });
 
   describe('formatCurrency', () => {
-    it('formats USD currency with default and custom fractions', () => {
-      assert.strictEqual(analytics.formatCurrency(1234.56), '$1,234.56');
-      assert.strictEqual(analytics.formatCurrency(1234.56, { maximumFractionDigits: 0 }), '$1,235');
-      assert.strictEqual(analytics.formatCurrency(0), '$0.00');
-      assert.strictEqual(analytics.formatCurrency(null), '$0.00');
+    it('formats INR currency with default and custom fractions', () => {
+      assert.strictEqual(analytics.formatCurrency(1234.56), '₹1,234.56');
+      assert.strictEqual(analytics.formatCurrency(1234.56, { maximumFractionDigits: 0 }), '₹1,235');
+      assert.strictEqual(analytics.formatCurrency(0), '₹0.00');
+      assert.strictEqual(analytics.formatCurrency(null), '₹0.00');
     });
   });
 

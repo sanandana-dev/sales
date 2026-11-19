@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   ShoppingBag,
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   Percent,
   ArrowUpRight,
@@ -88,9 +88,9 @@ export default function KpiCards({ summary, loading }) {
     {
       title: 'Total Revenue',
       value: formatCurrency(summary?.totalRevenue),
-      subValue: `Avg order: $${summary?.totalSales ? (summary.totalRevenue / summary.totalSales).toFixed(2) : '0.00'}`,
+      subValue: `Avg order: ₹${summary?.totalSales ? (summary.totalRevenue / summary.totalSales).toFixed(2) : '0.00'}`,
       change: summary?.changes?.revenueChangePct,
-      icon: DollarSign,
+      icon: IndianRupee,
       color: 'indigo',
       bgColor: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
     },
@@ -106,7 +106,7 @@ export default function KpiCards({ summary, loading }) {
     {
       title: 'Profit Margin %',
       value: `${marginVal}%`,
-      subValue: `You kept $${profitPer100} out of every $100 sold`,
+      subValue: `You kept ₹${profitPer100} out of every ₹100 sold`,
       subValueColor:
         marginVal >= 50
           ? 'text-emerald-600 dark:text-emerald-400 font-medium'

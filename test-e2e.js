@@ -40,8 +40,8 @@ async function runE2E() {
     throw new Error('Initial summary failed: ' + JSON.stringify(initSummary.data));
   console.log(`  ✓ Total Sales: ${initSummary.data.totalSales.toLocaleString()} orders`);
   console.log(`  ✓ Total Units: ${initSummary.data.totalUnits.toLocaleString()} items`);
-  console.log(`  ✓ Revenue: $${initSummary.data.totalRevenue.toLocaleString()}`);
-  console.log(`  ✓ Gross Profit: $${initSummary.data.totalProfit.toLocaleString()}`);
+  console.log(`  ✓ Revenue: ₹${initSummary.data.totalRevenue.toLocaleString()}`);
+  console.log(`  ✓ Gross Profit: ₹${initSummary.data.totalProfit.toLocaleString()}`);
   console.log(`  ✓ Margin: ${initSummary.data.profitMargin}%`);
   console.log(
     `  ✓ Delta vs prev period: Sales ${initSummary.data.changes.salesChangePct}%, Rev ${initSummary.data.changes.revenueChangePct}%`
@@ -53,7 +53,7 @@ async function runE2E() {
   if (!monthlyTrend.ok || !monthlyTrend.data.length) throw new Error('Monthly trend failed');
   console.log(`  ✓ Monthly trend returned ${monthlyTrend.data.length} months`);
   console.log(
-    `    Sample month [${monthlyTrend.data[0].label}]: $${monthlyTrend.data[0].revenue.toLocaleString()} rev, $${monthlyTrend.data[0].profit.toLocaleString()} profit`
+    `    Sample month [${monthlyTrend.data[0].label}]: ₹${monthlyTrend.data[0].revenue.toLocaleString()} rev, ₹${monthlyTrend.data[0].profit.toLocaleString()} profit`
   );
 
   const weeklyTrend = await api('/api/sales-trend?range=weekly');
@@ -65,14 +65,14 @@ async function runE2E() {
   const prodPerf = await api('/api/products/performance?sortBy=revenue&order=desc');
   if (!prodPerf.ok || !prodPerf.data.length) throw new Error('Product performance failed');
   console.log(
-    `  ✓ Top 1 Revenue Driver: "${prodPerf.data[0].name}" ($${prodPerf.data[0].totalRevenue.toLocaleString()}) - Badge: [${prodPerf.data[0].badge}]`
+    `  ✓ Top 1 Revenue Driver: "${prodPerf.data[0].name}" (₹${prodPerf.data[0].totalRevenue.toLocaleString()}) - Badge: [${prodPerf.data[0].badge}]`
   );
   console.log(
-    `  ✓ Top 2: "${prodPerf.data[1].name}" ($${prodPerf.data[1].totalRevenue.toLocaleString()}) - Badge: [${prodPerf.data[1].badge}]`
+    `  ✓ Top 2: "${prodPerf.data[1].name}" (₹${prodPerf.data[1].totalRevenue.toLocaleString()}) - Badge: [${prodPerf.data[1].badge}]`
   );
   const worstSeller = prodPerf.data[prodPerf.data.length - 1];
   console.log(
-    `  ✓ Lowest: "${worstSeller.name}" ($${worstSeller.totalRevenue.toLocaleString()}) - Badge: [${worstSeller.badge}]`
+    `  ✓ Lowest: "${worstSeller.name}" (₹${worstSeller.totalRevenue.toLocaleString()}) - Badge: [${worstSeller.badge}]`
   );
 
   // Search filtering
@@ -88,7 +88,7 @@ async function runE2E() {
   catRes.data.forEach(c => {
     sumShares += c.revenueSharePct;
     console.log(
-      `  ✓ ${c.category}: $${c.revenue.toLocaleString()} (${c.revenueSharePct}%), margin ${c.profitMargin}%`
+      `  ✓ ${c.category}: ₹${c.revenue.toLocaleString()} (${c.revenueSharePct}%), margin ${c.profitMargin}%`
     );
   });
   console.log(`  ✓ Total share sum: ${sumShares.toFixed(1)}% (approx 100%)`);
@@ -110,7 +110,7 @@ async function runE2E() {
   if (!postRes.ok || !postRes.data.success)
     throw new Error('POST sale failed: ' + JSON.stringify(postRes.data));
   console.log(
-    `  ✓ Created new sale: ID ${postRes.data.sale.id}, ${targetProduct.name} x 5, Rev: $${postRes.data.sale.revenue}, Profit: $${postRes.data.sale.profit}`
+    `  ✓ Created new sale: ID ${postRes.data.sale.id}, ${targetProduct.name} x 5, Rev: ₹${postRes.data.sale.revenue}, Profit: ₹${postRes.data.sale.profit}`
   );
 
   // 6. Verify Dashboard Data Increment
@@ -124,14 +124,14 @@ async function runE2E() {
     `  ✓ Total sales incremented: ${initSummary.data.totalSales} -> ${updatedSummary.data.totalSales}`
   );
   console.log(
-    `  ✓ Total revenue incremented: $${initSummary.data.totalRevenue} -> $${updatedSummary.data.totalRevenue}`
+    `  ✓ Total revenue incremented: ₹${initSummary.data.totalRevenue} -> ₹${updatedSummary.data.totalRevenue}`
   );
   if (updatedSummary.data.totalSales !== expectedSales) {
     throw new Error(`Expected ${expectedSales} total sales, got ${updatedSummary.data.totalSales}`);
   }
   if (Math.abs(updatedSummary.data.totalRevenue - expectedRevenue) > 0.05) {
     throw new Error(
-      `Expected $${expectedRevenue} total revenue, got $${updatedSummary.data.totalRevenue}`
+      `Expected ₹${expectedRevenue} total revenue, got ₹${updatedSummary.data.totalRevenue}`
     );
   }
 

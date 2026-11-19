@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   ShoppingCart,
-  DollarSign,
+  IndianRupee,
   BarChart2,
   Percent,
   ArrowUpRight,
@@ -94,8 +94,8 @@ export default function KPICardsRow({ summary, trendData = [], loading }) {
   const totalSalesVal = summary
     ? `${(summary.totalSales || 0).toLocaleString()} Orders`
     : '0 Orders';
-  const totalRevVal = summary ? formatCur(summary.totalRevenue || 0) : '$0';
-  const totalProfitVal = summary ? formatCur(summary.totalProfit || 0) : '$0';
+  const totalRevVal = summary ? formatCur(summary.totalRevenue || 0) : '₹0';
+  const totalProfitVal = summary ? formatCur(summary.totalProfit || 0) : '₹0';
   const marginVal = Number((summary?.profitMargin || 0).toFixed(1));
 
   const salesGrowth =
@@ -130,7 +130,7 @@ export default function KPICardsRow({ summary, trendData = [], loading }) {
       value: totalRevVal,
       growth: revGrowth,
       accentColor: '#2563EB',
-      icon: DollarSign,
+      icon: IndianRupee,
       iconBg: 'bg-[#2563EB]/10 text-[#2563EB]',
       chartType: 'sparkline'
     },
